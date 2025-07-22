@@ -1,0 +1,157 @@
+{% comment %}
+  NewsletterSignup Section - Auto-generated
+  Template Liquid que renderiza datos SSR y prepara la hidratación de React
+{% endcomment %}
+
+{% schema %}
+{
+  "name": "Newsletter Signup",
+  "tag": "section",
+  "class": "newsletter-signup-section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "NewsletterSignup Settings"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "title",
+      "default": "Sample title"
+    },
+    {
+      "type": "text",
+      "id": "subtitle",
+      "label": "subtitle",
+      "default": "Sample subtitle"
+    },
+    {
+      "type": "text",
+      "id": "placeholder",
+      "label": "placeholder"
+    },
+    {
+      "type": "text",
+      "id": "buttontext",
+      "label": "button Text",
+      "default": "Sample buttonText"
+    },
+    {
+      "type": "checkbox",
+      "id": "showprivacytext",
+      "label": "show Privacy Text",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enabledoubleoptin",
+      "label": "enable Double Optin",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "backgroundcolor",
+      "label": "background Color"
+    },
+    {
+      "type": "text",
+      "id": "apiendpoint",
+      "label": "api Endpoint"
+    }
+  ]
+}
+{% endschema %}
+
+{%- liquid
+  assign title = section.settings.title
+  assign subtitle = section.settings.subtitle
+  assign placeholder = section.settings.placeholder
+  assign buttontext = section.settings.buttontext
+  assign showprivacytext = section.settings.showprivacytext
+  assign enabledoubleoptin = section.settings.enabledoubleoptin
+  assign backgroundcolor = section.settings.backgroundcolor
+  assign apiendpoint = section.settings.apiendpoint
+-%}
+
+<section class="newsletter-signup-section" id="newsletter-signup-section-{{ section.id }}">
+  
+  {%- comment -%} React Component Root {%- endcomment -%}
+  <div data-component-root="NewsletterSignup" class="newsletter-signup-container">
+    
+    {%- comment -%} Datos JSON para React - Script con data-section-data {%- endcomment -%}
+    <script type="application/json" data-section-data>
+      {
+        "componentName": "NewsletterSignup",
+        "title": {{ title | json }},
+        "subtitle": {{ subtitle | json }},
+        "placeholder": {{ placeholder | json }},
+        "buttonText": {{ buttontext | json }},
+        "showPrivacyText": {{ showprivacytext | json }},
+        "enableDoubleOptin": {{ enabledoubleoptin | json }},
+        "backgroundColor": {{ backgroundcolor | json }},
+        "apiEndpoint": {{ apiendpoint | json }},
+        "settings": {
+          "title": {{ title | json }},
+          "subtitle": {{ subtitle | json }},
+          "placeholder": {{ placeholder | json }},
+          "buttonText": {{ buttontext | json }},
+          "showPrivacyText": {{ showprivacytext | json }},
+          "enableDoubleOptin": {{ enabledoubleoptin | json }},
+          "backgroundColor": {{ backgroundcolor | json }},
+          "apiEndpoint": {{ apiendpoint | json }},
+          "sectionId": "{{ section.id }}"
+        }
+      }
+    </script>
+
+    {%- comment -%} Fallback Content - Se muestra si JavaScript no carga {%- endcomment -%}
+    <div class="newsletter-signup-fallback">
+      <div class="fallback-content">
+        <p>Loading NewsletterSignup...</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+{%- comment -%} CSS Básico para Fallback {%- endcomment -%}
+<style>
+  .newsletter-signup-section {
+    margin: 2rem 0;
+  }
+
+  .newsletter-signup-container {
+    max-width: 100%;
+  }
+
+  /* Fallback styles - se ocultan cuando React carga */
+  .newsletter-signup-fallback {
+    display: block;
+  }
+
+  .newsletter-signup-container:has(.newsletter-signup) .newsletter-signup-fallback {
+    display: none;
+  }
+
+  .fallback-content {
+    text-align: center;
+    padding: 2rem;
+    background: #f5f5f5;
+    border-radius: 8px;
+  }
+
+  /* Loading state */
+  .newsletter-signup-container[data-component-root] {
+    min-height: 200px;
+    position: relative;
+  }
+
+  .newsletter-signup-container[data-component-root]:not(:has(.newsletter-signup))::after {
+    content: "Loading NewsletterSignup...";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #666;
+    font-size: 0.9rem;
+  }
+</style>

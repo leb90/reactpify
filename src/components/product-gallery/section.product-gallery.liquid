@@ -1,0 +1,167 @@
+{% comment %}
+  Product Gallery Section
+  Liquid template that renders SSR data and prepares React hydration
+{% endcomment %}
+
+{% schema %}
+{
+  "name": "Product Gallery",
+  "tag": "section",
+  "class": "product-gallery-section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Gallery Settings"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_thumbnails",
+      "label": "Show thumbnails",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_zoom",
+      "label": "Enable zoom on click",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "gallery_layout",
+      "label": "Gallery layout",
+      "options": [
+        { "value": "standard", "label": "Standard" },
+        { "value": "carousel", "label": "Carousel" },
+        { "value": "grid", "label": "Grid" }
+      ],
+      "default": "standard"
+    }
+  ]
+}
+{% endschema %}
+
+{%- liquid
+  assign show_thumbnails = section.settings.show_thumbnails
+  assign enable_zoom = section.settings.enable_zoom
+  assign gallery_layout = section.settings.gallery_layout
+-%}
+
+<section class="product-gallery-section" id="product-gallery-section-{{ section.id }}">
+  
+  {%- comment -%} React Component Root {%- endcomment -%}
+  <div data-component-root="ProductGallery" class="product-gallery-container">
+    
+    {%- comment -%} JSON data for React - Script with data-section-data {%- endcomment -%}
+    <script type="application/json" data-section-data>
+      {
+        "componentName": "ProductGallery",
+        "product": {{ product | json }},
+        "settings": {
+          "showThumbnails": {{ show_thumbnails | json }},
+          "enableZoom": {{ enable_zoom | json }},
+          "galleryLayout": {{ gallery_layout | json }},
+          "sectionId": "{{ section.id }}"
+        },
+        "showThumbnails": {{ show_thumbnails | json }},
+        "enableZoom": {{ enable_zoom | json }}
+      }
+    </script>
+
+    {%- comment -%} Fallback Content - Shows if JavaScript doesn't load {%- endcomment -%}
+    <div class="product-gallery-fallback">
+      {%- if product.images.size > 0 -%}
+        <div class="fallback-main-image">
+          <img 
+            src="{{ product.featured_image | image_url: width: 800 }}" 
+            alt="{{ product.featured_image.alt | escape | default: product.title }}"
+            width="800"
+            height="{{ 800 | divided_by: product.featured_image.aspect_ratio | round }}"
+          >
+        </div>
+        
+        {%- if show_thumbnails and product.images.size > 1 -%}
+          <div class="fallback-thumbnails">
+            {%- for image in product.images limit: 6 -%}
+              <img 
+                src="{{ image | image_url: width: 100 }}" 
+                alt="{{ image.alt | escape | default: product.title }}"
+                width="100"
+                height="{{ 100 | divided_by: image.aspect_ratio | round }}"
+                loading="lazy"
+              >
+            {%- endfor -%}
+          </div>
+        {%- endif -%}
+      {%- else -%}
+        <div class="no-images">
+          <p>No images available for this product.</p>
+        </div>
+      {%- endif -%}
+    </div>
+  </div>
+</section>
+
+{%- comment -%} Basic CSS for Fallback {%- endcomment -%}
+<style>
+  .product-gallery-section {
+    margin: 2rem 0;
+  }
+
+  .product-gallery-container {
+    max-width: 100%;
+  }
+
+  /* Fallback styles - hidden when React loads */
+  .product-gallery-fallback {
+    display: block;
+  }
+
+  .product-gallery-container:has(.product-gallery) .product-gallery-fallback {
+    display: none;
+  }
+
+  .fallback-main-image img {
+    width: 100%;
+    height: auto;
+    max-width: 800px;
+  }
+
+  .fallback-thumbnails {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .fallback-thumbnails img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border: 2px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .no-images {
+    text-align: center;
+    padding: 2rem;
+    background: #f5f5f5;
+    border-radius: 8px;
+  }
+
+  /* Loading state */
+  .product-gallery-container[data-component-root] {
+    min-height: 400px;
+    position: relative;
+  }
+
+  .product-gallery-container[data-component-root]:not(:has(.product-gallery))::after {
+    content: "Loading gallery...";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #666;
+    font-size: 0.9rem;
+  }
+</style> 

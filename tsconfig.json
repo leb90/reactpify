@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    "paths": {
+      "@components/*": ["src/utils/components/*"],
+      "@helpers/*": ["src/utils/helpers/*"],
+      "@interfaces/*": ["src/utils/interfaces/*"],
+      "@redux/*": ["src/redux/*"],
+      "@src/*": ["src/*"]
+    }
+  },
+  "include": ["build-scripts/**/*", "assets/**/*", "src/**/*", "vite-plugins/**/*"],
+  "exclude": ["node_modules", "sections", "snippets", "templates", "layout", "blocks", "config", "locales"]
+}

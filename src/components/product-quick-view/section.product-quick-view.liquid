@@ -1,0 +1,123 @@
+{% comment %}
+  ProductQuickView Section - Auto-generated
+  Template Liquid que renderiza datos SSR y prepara la hidratación de React
+{% endcomment %}
+
+{% schema %}
+{
+  "name": "Product Quick View",
+  "tag": "section",
+  "class": "product-quick-view-section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "ProductQuickView Settings"
+    },
+    {
+      "type": "text",
+      "id": "productid",
+      "label": "product Id"
+    },
+    {
+      "type": "checkbox",
+      "id": "showprice",
+      "label": "show Price",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "showaddtocart",
+      "label": "show Add To Cart",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "title",
+      "default": "Sample title"
+    }
+  ]
+}
+{% endschema %}
+
+{%- liquid
+  assign productid = section.settings.productid
+  assign showprice = section.settings.showprice
+  assign showaddtocart = section.settings.showaddtocart
+  assign title = section.settings.title
+-%}
+
+<section class="product-quick-view-section" id="product-quick-view-section-{{ section.id }}">
+  
+  {%- comment -%} React Component Root {%- endcomment -%}
+  <div data-component-root="ProductQuickView" class="product-quick-view-container">
+    
+    {%- comment -%} Datos JSON para React - Script con data-section-data {%- endcomment -%}
+    <script type="application/json" data-section-data>
+      {
+        "componentName": "ProductQuickView",
+        "productId": {{ productid | json }},
+        "showPrice": {{ showprice | json }},
+        "showAddToCart": {{ showaddtocart | json }},
+        "title": {{ title | json }},
+        "settings": {
+          "productId": {{ productid | json }},
+          "showPrice": {{ showprice | json }},
+          "showAddToCart": {{ showaddtocart | json }},
+          "title": {{ title | json }},
+          "sectionId": "{{ section.id }}"
+        }
+      }
+    </script>
+
+    {%- comment -%} Fallback Content - Se muestra si JavaScript no carga {%- endcomment -%}
+    <div class="product-quick-view-fallback">
+      <div class="fallback-content">
+        <p>Loading ProductQuickView...</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+{%- comment -%} CSS Básico para Fallback {%- endcomment -%}
+<style>
+  .product-quick-view-section {
+    margin: 2rem 0;
+  }
+
+  .product-quick-view-container {
+    max-width: 100%;
+  }
+
+  /* Fallback styles - se ocultan cuando React carga */
+  .product-quick-view-fallback {
+    display: block;
+  }
+
+  .product-quick-view-container:has(.product-quick-view) .product-quick-view-fallback {
+    display: none;
+  }
+
+  .fallback-content {
+    text-align: center;
+    padding: 2rem;
+    background: #f5f5f5;
+    border-radius: 8px;
+  }
+
+  /* Loading state */
+  .product-quick-view-container[data-component-root] {
+    min-height: 200px;
+    position: relative;
+  }
+
+  .product-quick-view-container[data-component-root]:not(:has(.product-quick-view))::after {
+    content: "Loading ProductQuickView...";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #666;
+    font-size: 0.9rem;
+  }
+</style>

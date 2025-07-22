@@ -1,0 +1,50 @@
+{
+  "name": "reactpify",
+  "version": "1.0.0",
+  "description": "The easiest way to add React components to any Shopify theme",
+  "keywords": ["shopify", "react", "liquid", "ecommerce", "theme", "components"],
+  "author": "Your Name <your.email@example.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/reactpify.git"
+  },
+  "homepage": "https://github.com/yourusername/reactpify#readme",
+  "bugs": {
+    "url": "https://github.com/yourusername/reactpify/issues"
+  },
+  "type": "module",
+  "scripts": {
+    "watch": "vite build --watch --mode development",
+    "build": "vite build",
+    "dev": "shopify theme dev",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "shopify:push": "npm run build && shopify theme push",
+    "shopify:pull": "shopify theme pull",
+    "setup": "node scripts/setup.js",
+    "clean": "rm -rf assets/reactpify.js sections/product-* sections/newsletter-* sections/countdown-* sections/cart-*"
+  },
+  "dependencies": {
+    "@reduxjs/toolkit": "^2.8.2",
+    "@types/node": "^24.0.15",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-redux": "^9.2.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.30.1",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.6.0",
+    "chokidar": "^4.0.3",
+    "eslint": "^9.30.1",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "globals": "^16.3.0",
+    "tsx": "^4.20.3",
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.35.1",
+    "vite": "^7.0.4"
+  }
+}

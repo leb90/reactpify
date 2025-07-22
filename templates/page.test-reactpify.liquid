@@ -1,0 +1,312 @@
+<!-- Cargar CSS de componentes React -->
+<link rel="stylesheet" href="{{ 'react-components/ProductQuickView.css' | asset_url }}">
+
+<!-- Cargar React Islands system -->
+<script type="module" src="{{ 'react-islands.js' | asset_url }}"></script>
+
+<!-- Test page para la nueva arquitectura Reactpify -->
+<div class="page-test-reactpify">
+  <div class="container">
+    <h1>🚀 Reactpify - Nueva Arquitectura Híbrida</h1>
+    <p>Esta página demuestra la nueva arquitectura: <strong>Liquid + React Islands</strong></p>
+    
+    <div class="architecture-overview">
+      <h2>🏗️ Arquitectura Híbrida</h2>
+      <div class="architecture-grid">
+        <div class="arch-card">
+          <h3>💧 Liquid (SSR)</h3>
+          <ul>
+            <li>Datos de Shopify</li>
+            <li>SEO perfecto</li>
+            <li>URLs nativas</li>
+            <li>Performance</li>
+          </ul>
+        </div>
+        <div class="arch-card">
+          <h3>⚛️ React (Interactividad)</h3>
+          <ul>
+            <li>Estado real</li>
+            <li>Hooks reales</li>
+            <li>Componentes interactivos</li>
+            <li>Progressive enhancement</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    
+    <hr style="margin: 2rem 0;">
+    
+    <h2>🛍️ Ejemplo: Productos con React Islands</h2>
+    <p>Demostrando Liquid SSR + React interactivo:</p>
+    
+    <div class="demo-products">
+      <!-- Producto 1 - Renderizado por Liquid (SSR) -->
+      <div class="product-demo">
+        <div class="product-image">
+          <img src="https://via.placeholder.com/300x300/007bff/white?text=Producto+Demo" alt="Producto Demo">
+          
+          <!-- React Island: Vista Rápida -->
+          <div class="product-overlay">
+            <react-component 
+              name="ProductQuickView" 
+              data-product-id="demo-123"
+              data-product-handle="producto-demo">
+              <!-- Fallback sin JavaScript -->
+              <a href="/products/demo" class="fallback-btn">Ver Detalles</a>
+            </react-component>
+          </div>
+        </div>
+        
+        <div class="product-info">
+          <h3>Producto Demo</h3>
+          <p class="price">$99.99</p>
+          <p class="description">Este producto demuestra la nueva arquitectura híbrida.</p>
+        </div>
+      </div>
+      
+      <!-- Producto 2 -->
+      <div class="product-demo">
+        <div class="product-image">
+          <img src="https://via.placeholder.com/300x300/28a745/white?text=Otro+Producto" alt="Otro Producto">
+          
+          <div class="product-overlay">
+            <react-component 
+              name="ProductQuickView" 
+              data-product-id="demo-456"
+              data-product-handle="otro-producto">
+              <a href="/products/otro" class="fallback-btn">Ver Detalles</a>
+            </react-component>
+          </div>
+        </div>
+        
+        <div class="product-info">
+          <h3>Otro Producto</h3>
+          <p class="price">$149.99</p>
+          <p class="description">Otro ejemplo de React Island en acción.</p>
+        </div>
+      </div>
+    </div>
+    
+    <hr style="margin: 2rem 0;">
+    
+    <h2>🎯 Secciones Disponibles</h2>
+    <p>Usa estas secciones en el <a href="/admin/themes/current/editor" target="_blank">Editor de Temas</a>:</p>
+    <ul>
+      <li>✅ <strong>featured-products-hybrid</strong> - Productos con React Islands interactivos</li>
+    </ul>
+    
+    <hr style="margin: 2rem 0;">
+    
+    <h2>🔧 Desarrollo</h2>
+    <p>Para crear nuevos componentes React:</p>
+    <pre><code>npm run create-component NombreComponente --type interactive --with-styles</code></pre>
+    
+    <h3>📁 Estructura:</h3>
+    <ul>
+      <li><code>assets/react-components/</code> - Componentes React reales</li>
+      <li><code>sections/*.liquid</code> - Templates Liquid con React Islands</li>
+      <li><code>assets/react-islands.ts</code> - Sistema de hidratación</li>
+    </ul>
+    
+    <h3>🚀 Beneficios:</h3>
+    <ul>
+      <li>React real con useState, useEffect, hooks</li>
+      <li>Liquid familiar para datos de Shopify</li>
+      <li>SEO perfecto (SSR nativo)</li>
+      <li>Progressive enhancement automático</li>
+      <li>Separación clara de responsabilidades</li>
+    </ul>
+    
+  </div>
+</div>
+
+<style>
+  .page-test-reactpify {
+    padding: 2rem 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+  }
+  
+  .container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 1rem;
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+  }
+  
+  .architecture-overview {
+    background: #f8f9fa;
+    padding: 2rem;
+    border-radius: 8px;
+    margin: 2rem 0;
+  }
+  
+  .architecture-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-top: 1rem;
+  }
+  
+  .arch-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+  
+  .arch-card h3 {
+    margin-top: 0;
+    color: #333;
+  }
+  
+  .arch-card ul {
+    margin-bottom: 0;
+  }
+  
+  .arch-card li {
+    margin-bottom: 0.5rem;
+    color: #666;
+  }
+  
+  .demo-products {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin: 2rem 0;
+  }
+  
+  .product-demo {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  
+  .product-demo:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  }
+  
+  .product-image {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .product-image img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+  }
+  
+  .product-overlay {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  
+  .product-demo:hover .product-overlay {
+    opacity: 1;
+  }
+  
+  .fallback-btn {
+    background: rgba(255,255,255,0.9);
+    color: #333;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+  
+  .product-info {
+    padding: 1.5rem;
+  }
+  
+  .product-info h3 {
+    margin: 0 0 0.5rem 0;
+    color: #333;
+  }
+  
+  .price {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #007bff;
+    margin: 0.5rem 0;
+  }
+  
+  .description {
+    color: #666;
+    margin: 0;
+    font-size: 0.9rem;
+  }
+  
+  code {
+    background: #f8f9fa;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    border: 1px solid #e9ecef;
+  }
+  
+  pre {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+    overflow-x: auto;
+    border: 1px solid #e9ecef;
+  }
+  
+  pre code {
+    background: none;
+    padding: 0;
+    border: none;
+  }
+  
+  h1 {
+    color: #333;
+    text-align: center;
+    margin-bottom: 0.5rem;
+  }
+  
+  h2 {
+    color: #495057;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 0.5rem;
+  }
+  
+  a {
+    color: #007bff;
+    text-decoration: none;
+  }
+  
+  a:hover {
+    text-decoration: underline;
+  }
+  
+  ul li {
+    margin-bottom: 0.5rem;
+  }
+  
+  @media (max-width: 768px) {
+    .architecture-grid,
+    .demo-products {
+      grid-template-columns: 1fr;
+    }
+    
+    .container {
+      padding: 1rem;
+    }
+    
+    .arch-card {
+      padding: 1rem;
+    }
+  }
+</style> 

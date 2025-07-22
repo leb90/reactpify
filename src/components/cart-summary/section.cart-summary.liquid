@@ -1,0 +1,105 @@
+{% comment %}
+  CartSummary Section - Auto-generated
+  Liquid template that renders SSR data and prepares React hydration
+{% endcomment %}
+
+{% schema %}
+{
+  "name": "Cart Summary",
+  "tag": "section",
+  "class": "cart-summary-section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "CartSummary Settings"
+    },
+    {
+      "type": "checkbox",
+      "id": "showitems",
+      "label": "show Items",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "classname",
+      "label": "class Name"
+    }
+  ]
+}
+{% endschema %}
+
+{%- liquid
+  assign showitems = section.settings.showitems
+  assign classname = section.settings.classname
+-%}
+
+<section class="cart-summary-section" id="cart-summary-section-{{ section.id }}">
+  
+  {%- comment -%} React Component Root {%- endcomment -%}
+  <div data-component-root="CartSummary" class="cart-summary-container">
+    
+    {%- comment -%} JSON data for React - Script with data-section-data {%- endcomment -%}
+    <script type="application/json" data-section-data>
+      {
+        "componentName": "CartSummary",
+        "showItems": {{ showitems | json }},
+        "className": {{ classname | json }},
+        "settings": {
+          "showItems": {{ showitems | json }},
+          "className": {{ classname | json }},
+          "sectionId": "{{ section.id }}"
+        }
+      }
+    </script>
+
+    {%- comment -%} Fallback Content - Shows if JavaScript doesn't load {%- endcomment -%}
+    <div class="cart-summary-fallback">
+      <div class="fallback-content">
+        <p>Loading CartSummary...</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+  {%- comment -%} Basic CSS for Fallback {%- endcomment -%}
+<style>
+  .cart-summary-section {
+    margin: 2rem 0;
+  }
+
+  .cart-summary-container {
+    max-width: 100%;
+  }
+
+  /* Fallback styles - hidden when React loads */
+  .cart-summary-fallback {
+    display: block;
+  }
+
+  .cart-summary-container:has(.cart-summary) .cart-summary-fallback {
+    display: none;
+  }
+
+  .fallback-content {
+    text-align: center;
+    padding: 2rem;
+    background: #f5f5f5;
+    border-radius: 8px;
+  }
+
+  /* Loading state */
+  .cart-summary-container[data-component-root] {
+    min-height: 200px;
+    position: relative;
+  }
+
+  .cart-summary-container[data-component-root]:not(:has(.cart-summary))::after {
+    content: "Loading CartSummary...";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #666;
+    font-size: 0.9rem;
+  }
+</style>

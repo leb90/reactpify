@@ -1,0 +1,158 @@
+{% comment %}
+  CountdownTimer Section - Auto-generated
+  Template Liquid que renderiza datos SSR y prepara la hidratación de React
+{% endcomment %}
+
+{% schema %}
+{
+  "name": "Countdown Timer",
+  "tag": "section",
+  "class": "countdown-timer-section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "CountdownTimer Settings"
+    },
+    {
+      "type": "text",
+      "id": "targetdate",
+      "label": "target Date"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "title",
+      "default": "Sample title"
+    },
+    {
+      "type": "checkbox",
+      "id": "showdays",
+      "label": "show Days",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "showhours",
+      "label": "show Hours",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "showminutes",
+      "label": "show Minutes",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "showseconds",
+      "label": "show Seconds",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "backgroundcolor",
+      "label": "background Color"
+    },
+    {
+      "type": "text",
+      "id": "textcolor",
+      "label": "text Color",
+      "default": "Sample textColor"
+    }
+  ]
+}
+{% endschema %}
+
+{%- liquid
+  assign targetdate = section.settings.targetdate
+  assign title = section.settings.title
+  assign showdays = section.settings.showdays
+  assign showhours = section.settings.showhours
+  assign showminutes = section.settings.showminutes
+  assign showseconds = section.settings.showseconds
+  assign backgroundcolor = section.settings.backgroundcolor
+  assign textcolor = section.settings.textcolor
+-%}
+
+<section class="countdown-timer-section" id="countdown-timer-section-{{ section.id }}">
+  
+  {%- comment -%} React Component Root {%- endcomment -%}
+  <div data-component-root="CountdownTimer" class="countdown-timer-container">
+    
+    {%- comment -%} Datos JSON para React - Script con data-section-data {%- endcomment -%}
+    <script type="application/json" data-section-data>
+      {
+        "componentName": "CountdownTimer",
+        "targetDate": {{ targetdate | json }},
+        "title": {{ title | json }},
+        "showDays": {{ showdays | json }},
+        "showHours": {{ showhours | json }},
+        "showMinutes": {{ showminutes | json }},
+        "showSeconds": {{ showseconds | json }},
+        "backgroundColor": {{ backgroundcolor | json }},
+        "textColor": {{ textcolor | json }},
+        "settings": {
+          "targetDate": {{ targetdate | json }},
+          "title": {{ title | json }},
+          "showDays": {{ showdays | json }},
+          "showHours": {{ showhours | json }},
+          "showMinutes": {{ showminutes | json }},
+          "showSeconds": {{ showseconds | json }},
+          "backgroundColor": {{ backgroundcolor | json }},
+          "textColor": {{ textcolor | json }},
+          "sectionId": "{{ section.id }}"
+        }
+      }
+    </script>
+
+    {%- comment -%} Fallback Content - Se muestra si JavaScript no carga {%- endcomment -%}
+    <div class="countdown-timer-fallback">
+      <div class="fallback-content">
+        <p>Loading CountdownTimer...</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+{%- comment -%} CSS Básico para Fallback {%- endcomment -%}
+<style>
+  .countdown-timer-section {
+    margin: 2rem 0;
+  }
+
+  .countdown-timer-container {
+    max-width: 100%;
+  }
+
+  /* Fallback styles - se ocultan cuando React carga */
+  .countdown-timer-fallback {
+    display: block;
+  }
+
+  .countdown-timer-container:has(.countdown-timer) .countdown-timer-fallback {
+    display: none;
+  }
+
+  .fallback-content {
+    text-align: center;
+    padding: 2rem;
+    background: #f5f5f5;
+    border-radius: 8px;
+  }
+
+  /* Loading state */
+  .countdown-timer-container[data-component-root] {
+    min-height: 200px;
+    position: relative;
+  }
+
+  .countdown-timer-container[data-component-root]:not(:has(.countdown-timer))::after {
+    content: "Loading CountdownTimer...";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #666;
+    font-size: 0.9rem;
+  }
+</style>
