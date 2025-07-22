@@ -52,6 +52,21 @@ function updateThemeLayout() {
   log('✅ Added Reactpify script to layout/theme.liquid', 'green');
 }
 
+function setupEnvFile() {
+  if (checkFileExists('.env')) {
+    log('✅ .env file already exists', 'green');
+    return;
+  }
+
+  if (checkFileExists('.env.example')) {
+    fs.copyFileSync('.env.example', '.env');
+    log('✅ Created .env file from .env.example', 'green');
+    log('⚠️  Please edit .env with your Shopify store details', 'yellow');
+  } else {
+    log('⚠️  .env.example not found. You may need to create .env manually.', 'yellow');
+  }
+}
+
 function createExampleComponent() {
   const componentDir = 'src/components/welcome-banner';
   const componentPath = path.join(componentDir, 'WelcomeBanner.tsx');
@@ -111,6 +126,10 @@ function runSetup() {
     log('   Make sure you\'re in a directory with layout/ and sections/ folders.', 'yellow');
     process.exit(1);
   }
+
+  // Setup .env file
+  log('📄 Setting up environment configuration...', 'blue');
+  setupEnvFile();
 
   // Update theme.liquid
   log('📝 Updating layout/theme.liquid...', 'blue');

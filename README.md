@@ -44,6 +44,8 @@ npx reactpify init
 
 **🔗 [Full setup guide with detailed steps →](GETTING_STARTED.md)**
 
+> 💡 **Pro tip:** The setup automatically creates a `.env` file for your Shopify store configuration!
+
 ### 2. Start Development
 
 **🚀 Quick Start (2 terminals needed):**
@@ -52,13 +54,27 @@ npx reactpify init
 npm run watch
 
 # Terminal 2: Shopify live preview
-npm run dev
+npm run dev        # Uses hardcoded store values
+# OR
+npm run env:dev    # Uses .env file variables
 ```
 
 **⚡ Or use automation scripts:**
 ```bash
 ./start-dev.ps1  # Windows - opens both terminals automatically
 ./start-dev.sh   # Mac/Linux - opens both terminals automatically
+```
+
+**💡 Available Shopify commands:**
+```bash
+# Direct commands (hardcoded values)
+npm run dev              # Development server
+npm run shopify:push     # Deploy to main theme
+
+# Environment-based commands (reads .env file)
+npm run env:dev          # Development server
+npm run env:push:dev     # Deploy to dev theme
+npm run env:push:prod    # Deploy to production theme
 ```
 
 ### 3. Create Your First Component
@@ -583,11 +599,22 @@ npm run dev      # Shopify live preview with hot reload
 # Build for production
 npm run build
 
-# Deploy to Shopify
-npm run shopify:push
+# Deploy to development theme
+npm run shopify:push:dev
 
-# Or deploy to specific theme
-shopify theme push --theme=THEME_ID --store=your-store.myshopify.com
+# Deploy to production theme  
+npm run shopify:push:prod
+
+# Deploy to main theme
+npm run shopify:push
+```
+
+### Environment Configuration
+```bash
+# Edit .env file with your store details
+SHOPIFY_STORE=your-store.myshopify.com
+SHOPIFY_DEV_THEME_ID=123456789
+SHOPIFY_PROD_THEME_ID=987654321
 ```
 
 ### CI/CD Integration

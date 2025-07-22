@@ -20,6 +20,9 @@ build/
 .env.test.local
 .env.production.local
 
+# Keep .env.example for users
+!.env.example
+
 # Shopify CLI
 .shopify/
 .shopifyignore

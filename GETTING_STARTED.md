@@ -29,11 +29,14 @@ npm install
 # Login to Shopify CLI (if not already)
 shopify auth login
 
-# Connect to your store
-shopify theme init
+# Edit .env file with your store details
+# The setup script creates .env from .env.example
+# Update these values:
+# SHOPIFY_STORE=your-store.myshopify.com
+# SHOPIFY_DEV_THEME_ID=your_development_theme_id
 
 # Or connect to existing theme
-shopify theme pull --store=your-store.myshopify.com
+shopify theme pull
 ```
 
 ### Step 4: Start Development
@@ -99,16 +102,23 @@ npx reactpify create component-name
 
 Regardless of which option you choose:
 
-1. **Edit `layout/theme.liquid`** to include Reactpify:
-```liquid
-<script type="module" src="{{ 'reactpify.js' | asset_url }}"></script>
+1. **Configure your store** in `.env` file:
+```bash
+SHOPIFY_STORE=your-store.myshopify.com
+SHOPIFY_DEV_THEME_ID=your_dev_theme_id
+SHOPIFY_PROD_THEME_ID=your_prod_theme_id
 ```
 
 2. **Create React components** in `src/components/`
 
 3. **Use in Shopify** by adding the auto-generated sections in the theme editor
 
-4. **Deploy** with `npm run build && shopify theme push`
+4. **Deploy** with environment-aware commands:
+```bash
+npm run shopify:push:dev   # Deploy to development theme
+npm run shopify:push:prod  # Deploy to production theme
+npm run shopify:push       # Deploy to main theme
+```
 
 ---
 
