@@ -1,0 +1,52 @@
+/* Reactpify Styles - All Tailwind classes used in components */
+@import './styles/main.css';
+
+/* Force include all classes used in components */
+.reactpify-force-classes {
+  /* Welcome Banner classes */
+  @apply bg-gradient-to-br from-blue-500 via-blue-600 to-purple-700;
+  @apply from-emerald-500 via-teal-600 to-cyan-700;
+  @apply from-purple-500 via-pink-600 to-rose-700;
+  @apply text-5xl md:text-6xl lg:text-7xl font-black;
+  @apply rounded-3xl shadow-2xl backdrop-blur-sm border border-white/20;
+  @apply animate-pulse transform hover:scale-105 transition-all duration-500;
+  
+  /* Countdown Timer classes */
+  @apply from-red-500 to-pink-600 shadow-red-500/25;
+  @apply from-orange-500 to-yellow-600 shadow-orange-500/25;
+  @apply from-blue-500 to-cyan-600 shadow-blue-500/25;
+  @apply from-green-500 to-emerald-600 shadow-green-500/25;
+  @apply text-5xl md:text-6xl font-black font-mono tracking-tighter;
+  @apply hover:scale-110 hover:rotate-1 transition-all duration-500;
+  
+  /* Newsletter classes - NEW DESIGN */
+  @apply min-h-[400px] flex items-center justify-center p-6;
+  @apply from-blue-600 via-purple-600 to-pink-600;
+  @apply from-emerald-500 via-teal-500 to-cyan-500;
+  @apply from-orange-500 via-pink-500 to-rose-500;
+  @apply backdrop-blur-lg border-white/30;
+  @apply w-20 h-20 bg-white/20 backdrop-blur-sm shadow-lg;
+  @apply text-4xl text-3xl md:text-4xl lg:text-5xl font-black leading-tight;
+  @apply text-white text-white/90 font-medium;
+  @apply space-y-6 sm:flex-row gap-4;
+  @apply group-focus-within:blur-none;
+  @apply bg-white/90 border-white/30 rounded-2xl;
+  @apply placeholder-gray-500 focus:border-white focus:bg-white;
+  @apply focus:ring-white/30 disabled:opacity-70 disabled:cursor-not-allowed;
+  @apply hover:shadow-xl transform hover:scale-105;
+  @apply bg-gradient-to-r from-green-400 to-emerald-500;
+  @apply from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700;
+  @apply bg-red-500/90 border-red-400/30;
+  @apply flex-wrap justify-center gap-6;
+  @apply delay-700 delay-300 animate-pulse;
+  
+  /* Common utilities */
+  @apply max-w-7xl mx-auto px-4 py-8;
+  @apply w-full flex flex-col sm:flex-row gap-6;
+  @apply relative overflow-hidden;
+  @apply absolute inset-0;
+  @apply group-hover:scale-x-100;
+  
+  /* This class will never be used but forces Tailwind to include all our styles */
+  display: none !important;
+} 

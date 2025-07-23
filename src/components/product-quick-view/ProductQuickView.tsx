@@ -14,7 +14,7 @@ export const ProductQuickView: React.FC<ProductQuickViewProps> = ({
   productId,
   showPrice = true,
   showAddToCart = true,
-  title = "Quick View"
+  title = "Quick View 👁️"
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ProductGalleryProps } from '../../utils/interfaces/product';
 
 /**
- * ProductGallery - React component for product image gallery
+ * ProductGallery - React component for product image gallery 🖼️
  */
 export const ProductGallery: React.FC<ProductGalleryProps> = ({
   product,

@@ -1,0 +1,152 @@
+{% comment %} MANUAL EDIT {% endcomment %}
+{% comment %}
+  Custom Metaobject Handler - Manually Created
+  Este snippet muestra cómo manejar metaobjects complejos manualmente
+{% endcomment %}
+
+{%- liquid
+  # Load metaobject data
+  assign metaobject_handle = metaobject_handle | default: 'default-handle'
+  assign metaobject_data = shop.metaobjects[metaobject_handle] | first
+  
+  # Extract fields with fallbacks
+  assign title = metaobject_data.fields['title'].value | default: 'Default Title'
+  assign description = metaobject_data.fields['description'].value | default: ''
+  assign image = metaobject_data.fields['image'].value | default: null
+  assign price = metaobject_data.fields['price'].value | default: 0
+  assign features = metaobject_data.fields['features'].value | default: empty
+  assign is_featured = metaobject_data.fields['featured'].value | default: false
+-%}
+
+<div class="metaobject-card" data-metaobject="{{ metaobject_handle }}">
+  {% if image %}
+    <div class="metaobject-image">
+      <img 
+        src="{{ image | image_url: width: 400 }}" 
+        alt="{{ image.alt | default: title }}"
+        loading="lazy"
+      />
+      {% if is_featured %}
+        <span class="featured-badge">Featured</span>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  <div class="metaobject-content">
+    <h3 class="metaobject-title">{{ title }}</h3>
+    
+    {% if description != blank %}
+      <div class="metaobject-description">
+        {{ description | strip_html | truncate: 150 }}
+      </div>
+    {% endif %}
+
+    {% if price > 0 %}
+      <div class="metaobject-price">
+        {{ price | money }}
+      </div>
+    {% endif %}
+
+    {% if features != empty %}
+      <ul class="metaobject-features">
+        {% for feature in features limit: 3 %}
+          <li>{{ feature }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    {% comment %} Custom Liquid logic that can't be auto-generated {% endcomment %}
+    {% if metaobject_data.fields['availability'].value == 'in_stock' %}
+      <button class="add-to-cart-btn" data-action="add-to-cart">
+        Add to Cart
+      </button>
+    {% else %}
+      <button class="notify-btn" data-action="notify" disabled>
+        Notify When Available
+      </button>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+  .metaobject-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+  
+  .metaobject-card:hover {
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+  }
+
+  .metaobject-image {
+    position: relative;
+  }
+
+  .featured-badge {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: #f59e0b;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: bold;
+  }
+
+  .metaobject-content {
+    padding: 1rem;
+  }
+
+  .metaobject-title {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+  }
+
+  .metaobject-price {
+    font-size: 1.125rem;
+    font-weight: bold;
+    color: #059669;
+    margin: 0.5rem 0;
+  }
+
+  .metaobject-features {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0;
+  }
+
+  .metaobject-features li {
+    padding: 0.25rem 0;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .add-to-cart-btn, .notify-btn {
+    width: 100%;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 0.375rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .add-to-cart-btn {
+    background: #3b82f6;
+    color: white;
+  }
+
+  .add-to-cart-btn:hover {
+    background: #2563eb;
+  }
+
+  .notify-btn {
+    background: #6b7280;
+    color: white;
+    cursor: not-allowed;
+  }
+</style> 

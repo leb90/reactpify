@@ -7,7 +7,7 @@ interface CartSummaryProps {
 }
 
 /**
- * CartSummary Component - Shows cart items and total using Redux
+ * CartSummary Component - Shows cart items and total using Redux 🛒✨
  * Example component using Redux state - feel free to modify or delete
  */
 export const CartSummary: React.FC<CartSummaryProps> = ({

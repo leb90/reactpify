@@ -58,7 +58,8 @@
     <script src="{{ 'critical.js' | asset_url }}"></script>
     {% # theme-check-enable ParserBlockingScript %}
 
-    {% comment %} Reactpify {% endcomment %}
+    {% comment %} Reactpify CSS & JS {% endcomment %}
+    <link rel="stylesheet" href="{{ 'direct-css.css' | asset_url }}">
     <script type="module" src="{{ 'reactpify.js' | asset_url }}"></script>
 
     {% render 'search-modal' %}

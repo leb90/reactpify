@@ -4,9 +4,11 @@ import { registerComponent, initRenderSystem } from './utils/helpers/renderCompo
 // Auto-generated imports
 import { CartSummary } from './components/cart-summary/CartSummary';
 import { CountdownTimer } from './components/countdown-timer/CountdownTimer';
+import { HeroSection } from './components/hero-section/HeroSection';
 import { NewsletterSignup } from './components/newsletter-signup/NewsletterSignup';
 import { ProductGallery } from './components/product-gallery/ProductGallery';
 import { ProductQuickView } from './components/product-quick-view/ProductQuickView';
+import { Testimonials } from './components/testimonials/Testimonials';
 import { WelcomeBanner } from './components/welcome-banner/WelcomeBanner';
 
 /**
@@ -19,9 +21,11 @@ console.log('🚀 Initializing Reactpify');
 // Auto-generated component registrations
 registerComponent('CartSummary', CartSummary);
 registerComponent('CountdownTimer', CountdownTimer);
+registerComponent('HeroSection', HeroSection);
 registerComponent('NewsletterSignup', NewsletterSignup);
 registerComponent('ProductGallery', ProductGallery);
 registerComponent('ProductQuickView', ProductQuickView);
+registerComponent('Testimonials', Testimonials);
 registerComponent('WelcomeBanner', WelcomeBanner);
 
 initRenderSystem();

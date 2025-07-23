@@ -73,9 +73,17 @@ export const renderComponent = <T extends ComponentData>(
       }
 
       const root = createRoot(rootElement);
+      
+      // Create wrapper with auto-styling
+      const WrappedComponent = () => (
+        <div className="reactpify-component">
+          <ComponentToRender {...sectionData} />
+        </div>
+      );
+      
       root.render(
         <Provider store={store}>
-          <ComponentToRender {...sectionData} />
+          <WrappedComponent />
         </Provider>
       );
       

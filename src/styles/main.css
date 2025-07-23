@@ -1,0 +1,171 @@
+/* Import only what we need from Tailwind */
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Reactpify Global Reset - Applied automatically */
+:where([data-component-root], .reactpify-component) {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  contain: layout style;
+}
+
+/* Reactpify Custom Styles */
+@layer base {
+  /* Auto-applied reset for all Reactpify containers */
+  [data-component-root] {
+    @apply font-sans;
+    line-height: 1.5 !important;
+    letter-spacing: normal !important;
+    word-spacing: normal !important;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    isolation: isolate;
+    position: relative;
+    z-index: 1;
+  }
+  
+  [data-component-root] * {
+    box-sizing: border-box !important;
+  }
+  
+  /* Fallback reset for manual containers */
+  .reactpify-component {
+    @apply font-sans;
+    line-height: 1.5 !important;
+    letter-spacing: normal !important;
+    word-spacing: normal !important;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    isolation: isolate;
+    position: relative;
+    z-index: 1;
+  }
+  
+  .reactpify-component * {
+    box-sizing: border-box !important;
+  }
+}
+
+@layer components {
+  /* Loading fallback styles */
+  .reactpify-loading {
+    @apply flex items-center justify-center min-h-[200px] bg-gray-50 rounded-lg;
+  }
+  
+  .reactpify-loading::before {
+    content: '';
+    @apply w-8 h-8 border-4 border-gray-300 border-t-primary-500 rounded-full animate-spin mr-3;
+  }
+  
+  /* Component containers - auto-applied to all Reactpify components */
+  [data-component-root] {
+    @apply animate-fade-in;
+  }
+  
+  .reactpify-component {
+    @apply animate-fade-in;
+  }
+  
+  /* Auto text rendering for all Reactpify components */
+  [data-component-root] h1,
+  [data-component-root] h2,
+  [data-component-root] h3,
+  [data-component-root] h4,
+  [data-component-root] h5,
+  [data-component-root] h6,
+  .reactpify-component h1,
+  .reactpify-component h2,
+  .reactpify-component h3,
+  .reactpify-component h4,
+  .reactpify-component h5,
+  .reactpify-component h6 {
+    line-height: 1.2 !important;
+    letter-spacing: -0.025em !important;
+    font-weight: bold !important;
+    margin: 0 !important;
+  }
+  
+  [data-component-root] p,
+  .reactpify-component p {
+    line-height: 1.6 !important;
+    margin: 0 !important;
+  }
+  
+  [data-component-root] button,
+  .reactpify-component button {
+    line-height: 1 !important;
+    letter-spacing: normal !important;
+    font-weight: 600 !important;
+  }
+  
+  [data-component-root] input,
+  .reactpify-component input {
+    line-height: 1.5 !important;
+    letter-spacing: normal !important;
+  }
+  
+  /* Button styles */
+  .btn-primary {
+    @apply bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg;
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary-600 hover:bg-secondary-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg;
+  }
+  
+  .btn-outline {
+    @apply border-2 border-primary-600 text-primary-600 hover:bg-primary-600 hover:text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200;
+  }
+  
+  /* Input styles */
+  .input-primary {
+    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors;
+  }
+  
+  /* Card styles */
+  .card {
+    @apply bg-white rounded-xl shadow-lg p-6 border border-gray-100;
+  }
+  
+  .card-gradient {
+    @apply bg-gradient-to-br from-primary-50 to-secondary-50 rounded-xl shadow-lg p-6 border border-primary-100;
+  }
+  
+  /* Auto fallback styles - works with any component */
+  [class*="-fallback"] {
+    display: block !important;
+    font-family: system-ui, -apple-system, sans-serif !important;
+    line-height: 1.5 !important;
+    letter-spacing: normal !important;
+    isolation: isolate;
+  }
+
+  /* Hide fallback when React component loads */
+  [data-component-root]:has(.reactpify-component) [class*="-fallback"],
+  [class*="-container"]:has([data-component-root]) [class*="-fallback"],
+  [class*="-container"]:has(.reactpify-component) [class*="-fallback"] {
+    display: none !important;
+  }
+  
+  /* Override any specific component loading states */
+  [data-component-root]:has(.reactpify-component)::after,
+  [class*="-container"]:has(.reactpify-component)::after {
+    display: none !important;
+    content: none !important;
+  }
+
+  .fallback-content {
+    text-align: center !important;
+    padding: 2rem !important;
+    background: #f8f9fa !important;
+    border-radius: 12px !important;
+    border: 1px solid #e9ecef !important;
+    color: #6c757d !important;
+    font-size: 0.9rem !important;
+    font-weight: 500 !important;
+    margin: 0 !important;
+  }
+} 
