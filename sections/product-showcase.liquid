@@ -1,0 +1,131 @@
+{% comment %}
+  ProductShowcase Section - Auto-generated with Metaobject Support
+  Liquid template that renders SSR data and prepares React hydration
+{% endcomment %}
+
+{% schema %}
+{
+  "name": "Product Showcase",
+  "tag": "section",
+  "class": "product-showcase-section",
+  "settings": [
+    {
+      "type": "header",
+      "content": "ProductShowcase Settings"
+    },
+    {
+      "type": "text",
+      "id": "title",
+      "label": "title",
+      "default": "Sample title"
+    },
+    {
+      "type": "text",
+      "id": "subtitle",
+      "label": "subtitle",
+      "default": "Sample subtitle"
+    },
+    {
+      "type": "product",
+      "id": "products",
+      "label": "products"
+    },
+    {
+      "type": "text",
+      "id": "id",
+      "label": "id"
+    },
+    {
+      "type": "text",
+      "id": "name",
+      "label": "name"
+    },
+    {
+      "type": "text",
+      "id": "price",
+      "label": "price"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "image"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Product Showcase"
+    }
+  ]
+}
+{% endschema %}
+
+{%- liquid
+  assign title = section.settings.title
+  assign subtitle = section.settings.subtitle
+  assign products = all_products[section.settings.products]
+  assign id = section.settings.id
+  assign name = section.settings.name
+  assign price = section.settings.price
+  assign image = section.settings.image
+-%}
+
+<section class="product-showcase-section" id="product-showcase-section-{{ section.id }}">
+  
+  {%- comment -%} React Component Root {%- endcomment -%}
+  <div data-component-root="ProductShowcase" class="product-showcase-container">
+    
+    {%- comment -%} JSON data for React - Script with data-section-data {%- endcomment -%}
+    <script type="application/json" data-section-data>
+      {
+        "componentName": "ProductShowcase",
+        "title": {{ title | json }},
+        "subtitle": {{ subtitle | json }},
+        "products": {{ products | json }},
+        "id": {{ id | json }},
+        "name": {{ name | json }},
+        "price": {{ price | json }},
+        "image": {{ image | json }},
+        "settings": {
+          "title": {{ title | json }},
+        "subtitle": {{ subtitle | json }},
+        "products": {{ products | json }},
+        "id": {{ id | json }},
+        "name": {{ name | json }},
+        "price": {{ price | json }},
+        "image": {{ image | json }},
+          "sectionId": "{{ section.id }}"
+        }
+      }
+    </script>
+
+    {%- comment -%} Smart Fallback Content - Shows if JavaScript doesn't load {%- endcomment -%}
+    <div class="product-showcase-fallback" style="display: block;">
+      <div class="max-w-6xl mx-auto">
+        <h1 class="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          ✨ {% if title %}{{ title }}{% else %}ProductShowcase{% endif %}
+        </h1>
+        
+        {% if subtitle %}
+          <p class="text-xl opacity-80 max-w-3xl mx-auto">{{ subtitle }}</p>
+        {% endif %}
+        
+        <div class="inline-flex items-center gap-2 px-3 py-1 bg-white/20 rounded-full text-sm mt-4">
+          <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+          🚀 React component loading...
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* Hide fallback when React component loads */
+  .product-showcase-container:has(.reactpify-component) .product-showcase-fallback {
+    display: none !important;
+  }
+
+  /* Additional fallback cleanup */
+  [data-component-root="ProductShowcase"]:has(.reactpify-component) .product-showcase-fallback {
+    display: none !important;
+  }
+</style>

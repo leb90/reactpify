@@ -3,25 +3,22 @@ import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 import fs from 'fs';
 import path from 'path';
-import { autoLiquidGenerator } from './vite-plugins/auto-liquid-generator';
+import { fragmentInjection } from './vite-fragment-injection';
 import { autoComponentRegistry } from './vite-plugins/auto-component-registry';
 
 /**
- * Custom plugin to copy Liquid files
- * Copies section.*.liquid → sections/ and snippet.*.liquid → snippets/
- * Supports manual edits and overrides auto-generation when needed
+ * Hybrid Liquid Copy Plugin  
+ * Copies Liquid templates from src/components to sections/ with fragment injection
  */
-function liquidFileCopyPlugin() {
+function hybridLiquidPlugin() {
   return {
-    name: 'liquid-file-copy',
+    name: 'hybrid-liquid-copy',
     buildStart() {
-      console.log('🚀 Copying Liquid files...');
-      copyLiquidFiles();
+      copyHybridLiquidFiles();
     },
     handleHotUpdate({ file }: { file: string }) {
-      if (file.endsWith('.liquid')) {
-        console.log(`📝 Liquid file changed: ${file}`);
-        copyLiquidFiles();
+      if (file.includes('src/components/') && file.endsWith('.liquid')) {
+        copyHybridLiquidFiles();
       }
     }
   };
@@ -66,7 +63,7 @@ function isManuallyEditedLiquid(filePath: string): boolean {
        content.includes('FOR TEST') ||
        content.includes('MANUAL') ||
        content.includes('Custom'));
-    
+
     if (hasManualModifications) {
       console.log(`\x1b[93m📝 [MANUAL-DETECT]\x1b[0m Detected manual modifications in content: ${filePath}`);
       return true;
@@ -92,88 +89,72 @@ function isReactComponentFile(filePath: string): boolean {
   return isInComponentsDir && isSectionFile;
 }
 
-function copyLiquidFiles() {
-  const srcDir = './src';
-  const sectionsDir = './sections';
-  const snippetsDir = './snippets';
+/**
+ * Hybrid copy function with fragment injection
+ */
+async function copyHybridLiquidFiles() {
+  const srcDir = 'src/components';
+  const destDir = 'sections';
 
-  if (!fs.existsSync(sectionsDir)) {
-    fs.mkdirSync(sectionsDir, { recursive: true });
+  if (!fs.existsSync(srcDir)) {
+    console.log('📁 Source components directory not found');
+    return;
   }
-  if (!fs.existsSync(snippetsDir)) {
-    fs.mkdirSync(snippetsDir, { recursive: true });
+
+  if (!fs.existsSync(destDir)) {
+    fs.mkdirSync(destDir, { recursive: true });
   }
-  
-  function findLiquidFiles(dir: string): string[] {
-    const files: string[] = [];
-    const items = fs.readdirSync(dir);
+
+  console.log('🔄 Processing hybrid Liquid files...');
+
+  async function processDirectory(currentDir: string) {
+    const items = fs.readdirSync(currentDir, { withFileTypes: true });
 
     for (const item of items) {
-      const fullPath = path.join(dir, item);
-      const stat = fs.statSync(fullPath);
+      const sourcePath = path.join(currentDir, item.name);
 
-      if (stat.isDirectory()) {
-        files.push(...findLiquidFiles(fullPath));
-      } else if (item.endsWith('.liquid')) {
-        files.push(fullPath);
+      if (item.isDirectory()) {
+        await processDirectory(sourcePath);
+      } else if (item.name.startsWith('section.') && item.name.endsWith('.liquid')) {
+        await processLiquidFile(sourcePath);
       }
     }
-
-    return files;
   }
 
-  const liquidFiles = findLiquidFiles(srcDir);
-
-  for (const file of liquidFiles) {
-    const fileName = path.basename(file);
-    let destDir = '';
-    let destFileName = fileName;
-
-    // Determine destination based on file type
-    if (fileName.startsWith('section.')) {
-      destDir = sectionsDir;
-      destFileName = fileName.replace('section.', '');
-    }
-    else if (fileName.startsWith('snippet.')) {
-      destDir = snippetsDir;
-      destFileName = fileName.replace('snippet.', '');
-    }
-    else {
-      // Default to sections for other liquid files
-      destDir = sectionsDir;
-    }
-
-    const destPath = path.join(destDir, destFileName);
-
-    // Check if this is a React component file that should be auto-generated
-    const isReactComponent = isReactComponentFile(file);
-    const wasManuallyEdited = isManuallyEditedLiquid(file);
-
-    // Always copy files, but show different messages
-    if (wasManuallyEdited) {
-      console.log(`\x1b[91m📝 [MANUAL]\x1b[0m Copying manually edited file: ${file} → ${destPath}`);
-    } else if (isReactComponent) {
-      console.log(`🤖 Copying auto-generated React component: ${file} → ${destPath}`);
-    } else {
-      console.log(`✅ Copied: ${file} → ${destPath}`);
-    }
-
+  async function processLiquidFile(sourcePath: string) {
     try {
-      fs.copyFileSync(file, destPath);
+      const content = fs.readFileSync(sourcePath, 'utf-8');
+      
+      // Process fragments
+      const processedContent = await fragmentInjection(content);
+      
+      // Determine target filename
+      const fileName = path.basename(sourcePath);
+      const targetFileName = fileName.replace(/^section\./, '');
+      const targetPath = path.join(destDir, targetFileName);
+
+      // Write processed content
+      fs.writeFileSync(targetPath, processedContent);
+      
+      console.log(`🎯 [HYBRID] ${sourcePath} → ${targetPath}`);
     } catch (error) {
-      console.error(`❌ Error copying ${file}:`, error);
+      console.error(`❌ Error processing ${sourcePath}:`, error);
     }
   }
 
-  console.log(`📦 Liquid files copied successfully!`);
+  try {
+    await processDirectory(srcDir);
+    console.log('📦 Hybrid Liquid files processed successfully!');
+  } catch (error) {
+    console.error('❌ Error during hybrid liquid processing:', error);
+  }
 }
 
 export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
-    autoLiquidGenerator(),
     autoComponentRegistry(),
-    liquidFileCopyPlugin()
+    hybridLiquidPlugin()
   ],
   
   define: {

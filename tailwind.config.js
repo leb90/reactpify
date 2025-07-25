@@ -2,6 +2,7 @@
 export default {
   content: [
     "./src/**/*.{js,ts,jsx,tsx}",
+    "./src/components/**/*.liquid",
     "./sections/**/*.liquid",
     "./snippets/**/*.liquid",
     "./layout/**/*.liquid"

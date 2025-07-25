@@ -1,682 +1,402 @@
-# Reactpify 🚀
+# 🚀 Reactpify
 
-**The easiest way to add React components to any Shopify theme.**
+**The easiest way to add React components to any Shopify theme**
 
-A super simple library that automatically generates Liquid templates from React components, making it effortless to add modern interactivity to your Shopify store without changing your existing theme structure.
-
-[![npm version](https://img.shields.io/npm/v/reactpify.svg)](https://www.npmjs.com/package/reactpify)
+[![npm version](https://img.shields.io/npm/v/reactpifyjs.svg)](https://www.npmjs.com/package/reactpifyjs)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Downloads](https://img.shields.io/npm/dm/reactpifyjs.svg)](https://www.npmjs.com/package/reactpifyjs)
 
-## 🎯 Why Reactpify?
+Reactpify seamlessly integrates **React components** into **Shopify themes** with intelligent **Liquid auto-generation**, **Tailwind CSS**, and **Vite** for the best developer experience.
 
-**Traditional Shopify development:**
-- ❌ Limited interactivity with vanilla JS
-- ❌ Difficult state management
-- ❌ No component reusability
-- ❌ Complex to maintain interactive features
+## ✨ Features
 
-**With Reactpify:**
-- ✅ **Write React components** with full state management
-- ✅ **Automatic Liquid generation** - no manual template writing
-- ✅ **Works with any theme** - integrate without breaking existing code
-- ✅ **TypeScript support** - full type safety
-- ✅ **Live development** - see changes instantly
-- ✅ **SEO friendly** - server-side rendered with React hydration
+- 🎯 **Zero Configuration** - Works out of the box with any Shopify theme
+- 🤖 **Auto-Generation** - Intelligent Liquid template creation from React props
+- 🛡️ **Manual Edit Detection** - Preserves your custom Liquid code automatically
+- 🎨 **Tailwind CSS** - Built-in styling with component isolation
+- ⚡ **Vite Powered** - Lightning-fast development with HMR
+- 🔄 **Redux Ready** - State management included
+- 🛍️ **Metaobject Support** - Native Shopify dynamic content integration
+- 📱 **Responsive** - Mobile-first design principles
 
 ## 🚀 Quick Start
 
-### 1. Choose Your Setup Method
+### Installation
 
-**📋 Option A: Use as Template (Recommended)**
 ```bash
-# Clone Reactpify as your project base
-git clone https://github.com/yourusername/reactpify.git my-shopify-theme
-cd my-shopify-theme
-npm install
-npm run setup  # Automated setup
+npm install reactpifyjs
+# or
+yarn add reactpifyjs
 ```
 
-**📦 Option B: NPM Package** *(Coming Soon)*
+### Setup
+
+1. **Initialize in your Shopify theme:**
+
 ```bash
-npm install reactpify
-npx reactpify init
+npx reactpifyjs init
 ```
 
-**🔗 [Full setup guide with detailed steps →](GETTING_STARTED.md)**
+2. **Start development:**
 
-> 💡 **Pro tip:** The setup automatically creates a `.env` file for your Shopify store configuration!
-
-### 2. Start Development
-
-**🚀 Quick Start (2 terminals needed):**
 ```bash
-# Terminal 1: Auto-build React + generate Liquid
-npm run watch
-
-# Terminal 2: Shopify live preview
-npm run dev        # Uses hardcoded store values
-# OR
-npm run env:dev    # Uses .env file variables
+npm run dev
 ```
 
-**⚡ Or use automation scripts:**
+3. **Create your first component:**
+
 ```bash
-./start-dev.ps1  # Windows - opens both terminals automatically
-./start-dev.sh   # Mac/Linux - opens both terminals automatically
+npx reactpifyjs create welcome-banner
 ```
 
-**💡 Available Shopify commands:**
-```bash
-# Direct commands (hardcoded values)
-npm run dev              # Development server
-npm run shopify:push     # Deploy to main theme
+## 📁 Project Structure
 
-# Environment-based commands (reads .env file)
-npm run env:dev          # Development server
-npm run env:push:dev     # Deploy to dev theme
-npm run env:push:prod    # Deploy to production theme
+```
+your-shopify-theme/
+├── src/
+│   ├── components/
+│   │   ├── welcome-banner/
+│   │   │   ├── WelcomeBanner.tsx      # React component
+│   │   │   └── section.welcome-banner.liquid  # Auto-generated
+│   ├── main.tsx                       # Entry point
+│   └── styles/
+│       └── main.css                   # Tailwind CSS
+├── vite.config.ts                     # Vite configuration
+├── tailwind.config.js                 # Tailwind configuration
+└── assets/
+    ├── reactpify.js                   # Built bundle
+    └── reactpify.css                  # Built styles
 ```
 
-### 3. Create Your First Component
+## 🎯 Creating Components
 
-Create a React component in `src/components/`:
+### 1. React Component Example
 
 ```tsx
-// src/components/product-rating/ProductRating.tsx
-import React, { useState } from 'react';
+// src/components/hero-banner/HeroBanner.tsx
+import React from 'react';
 
-interface ProductRatingProps {
-  productId: string;
-  initialRating?: number;
-  showReviewCount?: boolean;
-  allowUserRating?: boolean;
+export interface HeroBannerProps {
+  title: string;
+  subtitle?: string;
+  buttonText: string;
+  buttonUrl?: string;
+  backgroundColor?: 'primary' | 'secondary' | 'accent';
+  showVideo?: boolean;
 }
 
-export const ProductRating: React.FC<ProductRatingProps> = ({
-  productId,
-  initialRating = 0,
-  showReviewCount = true,
-  allowUserRating = true
+export const HeroBanner: React.FC<HeroBannerProps> = ({
+  title = 'Welcome to Our Store',
+  subtitle,
+  buttonText = 'Shop Now',
+  buttonUrl = '#',
+  backgroundColor = 'primary',
+  showVideo = false
 }) => {
-  const [rating, setRating] = useState(initialRating);
-  const [userRating, setUserRating] = useState(0);
-
-  const handleRatingClick = (value: number) => {
-    if (allowUserRating) {
-      setUserRating(value);
-      // Send to your rating API
-      fetch('/api/rate-product', {
-        method: 'POST',
-        body: JSON.stringify({ productId, rating: value })
-      });
-    }
-  };
-
   return (
-    <div className="product-rating">
-      <div className="rating-stars">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <button
-            key={star}
-            onClick={() => handleRatingClick(star)}
-            className={`star ${star <= (userRating || rating) ? 'active' : ''}`}
-            disabled={!allowUserRating}
-          >
-            ⭐
-          </button>
-        ))}
-      </div>
-      {showReviewCount && (
-        <span className="review-count">({Math.floor(Math.random() * 100)} reviews)</span>
+    <div className={`hero-banner bg-${backgroundColor}-600 text-white p-8`}>
+      <h1 className="text-4xl font-bold mb-4">{title}</h1>
+      {subtitle && <p className="text-xl mb-6">{subtitle}</p>}
+      
+      <a 
+        href={buttonUrl}
+        className="btn-primary"
+      >
+        {buttonText}
+      </a>
+      
+      {showVideo && (
+        <div className="mt-8">
+          <video autoPlay muted loop className="w-full rounded-lg">
+            <source src="/path/to/video.mp4" type="video/mp4" />
+          </video>
+        </div>
       )}
     </div>
   );
 };
 ```
 
-### 4. Build and See the Magic! ✨
+### 2. Auto-Generated Liquid
 
-```bash
-npm run build
-```
-
-**Reactpify automatically:**
-- ✅ Detects your React component props
-- ✅ Generates `section.product-rating.liquid` with Shopify schema
-- ✅ Creates the data bridge between Liquid and React
-- ✅ Registers the component in the rendering system
-- ✅ Copies everything to your `sections/` folder
-
-### 5. Use in Shopify
-
-Your component is now available in the **Shopify Theme Editor**! 
-
-Add it to any template or use it programmatically:
+Reactpify automatically creates this Liquid section:
 
 ```liquid
-<!-- In any .liquid file -->
-<div data-component-root="ProductRating">
+<!-- Auto-generated section with Shopify admin settings -->
+<section class="hero-banner-section" data-component-root="HeroBanner">
+  <!-- Fallback content for SEO/loading -->
+  <div class="hero-fallback">
+    <h1>{{ section.settings.title }}</h1>
+    <p>{{ section.settings.subtitle }}</p>
+    <a href="{{ section.settings.buttonUrl }}">{{ section.settings.buttonText }}</a>
+  </div>
+  
+  <!-- React component data -->
   <script type="application/json" data-section-data>
     {
-      "productId": "{{ product.id }}",
-      "initialRating": 4.5,
-      "showReviewCount": true,
-      "allowUserRating": true
+      "title": {{ section.settings.title | json }},
+      "subtitle": {{ section.settings.subtitle | json }},
+      "buttonText": {{ section.settings.buttonText | json }},
+      "buttonUrl": {{ section.settings.buttonUrl | json }},
+      "backgroundColor": {{ section.settings.backgroundColor | json }},
+      "showVideo": {{ section.settings.showVideo }}
     }
   </script>
-</div>
-```
+</section>
 
-## 🏗️ How It Works
-
-### The Magic Behind the Scenes
-
-1. **You write React** with TypeScript interfaces
-2. **Reactpify scans** your component props automatically
-3. **Liquid templates are generated** with proper Shopify schema
-4. **Components are registered** in the rendering system
-5. **Everything is copied** to the right folders
-
-### Architecture Overview
-
-```
-Your Shopify Theme/
-├── src/                          # Your React components
-│   ├── components/               # Main Shopify components
-│   │   └── product-rating/
-│   │       ├── ProductRating.tsx # Your React component
-│   │       └── section.product-rating.liquid # Auto-generated!
-│   ├── utils/
-│   │   ├── components/           # Reusable UI components
-│   │   │   ├── atoms/           # Basic elements (Button, Input)
-│   │   │   └── molecules/       # Combined components (SearchBox, ProductCard)
-│   │   ├── helpers/renderComponents.tsx # Magic happens here
-│   │   └── interfaces/          # TypeScript interfaces
-│   ├── redux/                    # Redux state management
-│   │   ├── slices/              # Redux slices (cart, user, ui)
-│   │   ├── store.ts             # Store configuration
-│   │   └── hooks.ts             # Typed hooks
-│   └── main.tsx                  # Auto-updated registry
-├── sections/                     # Shopify sections (auto-populated)
-│   └── product-rating.liquid    # Ready to use!
-├── assets/
-│   └── reactpify.js             # Compiled React bundle
-└── layout/theme.liquid          # Include reactpify.js here
-```
-
-## 📋 Integration with Existing Themes
-
-Reactpify works with **any existing Shopify theme**. Here's how to integrate it:
-
-### Step 1: Add to Your Existing Theme
-
-```bash
-# In your existing theme directory
-git clone https://github.com/yourusername/reactpify.git reactpify-temp
-cp -r reactpify-temp/src .
-cp reactpify-temp/package.json .
-cp reactpify-temp/vite.config.ts .
-cp reactpify-temp/tsconfig.json .
-cp -r reactpify-temp/vite-plugins .
-rm -rf reactpify-temp
-npm install
-```
-
-### Step 2: Update Your theme.liquid
-
-Add this line before the closing `</body>` tag:
-
-```liquid
-<!-- Add this to layout/theme.liquid -->
-<script type="module" src="{{ 'reactpify.js' | asset_url }}"></script>
-```
-
-### Step 3: Start Development
-
-```bash
-npm run watch    # Terminal 1: Watch for React components
-npm run dev      # Terminal 2: Shopify dev server
-```
-
-### Step 4: Deploy
-
-```bash
-npm run build && npm run shopify:push
-```
-
-That's it! Your existing theme now supports React components.
-
-## 🎯 Development Workflow
-
-### Daily Development
-
-1. **Start the development environment**
-   ```bash
-   ./start-dev.ps1  # Windows
-   ./start-dev.sh   # Mac/Linux
-   ```
-
-2. **Create React components** in `src/components/`
-3. **See instant updates** in your Shopify preview
-4. **Components appear automatically** in Theme Editor
-5. **Deploy when ready** with `npm run shopify:push`
-
-### Component Types
-
-Reactpify automatically detects different prop types and creates appropriate Shopify settings:
-
-```tsx
-interface MyComponentProps {
-  title: string;           // → text input
-  showButton?: boolean;    // → checkbox
-  buttonColor?: string;    // → text input  
-  maxItems?: number;       // → number input
-}
-```
-
-Generated Shopify schema:
-```json
+{% schema %}
 {
+  "name": "Hero Banner",
   "settings": [
     {
       "type": "text",
       "id": "title",
-      "label": "Title"
+      "label": "Title",
+      "default": "Welcome to Our Store"
     },
     {
-      "type": "checkbox", 
-      "id": "showbutton",
-      "label": "Show Button",
-      "default": true
+      "type": "textarea",
+      "id": "subtitle", 
+      "label": "Subtitle"
+    },
+    {
+      "type": "text",
+      "id": "buttonText",
+      "label": "Button Text",
+      "default": "Shop Now"
+    },
+    {
+      "type": "url",
+      "id": "buttonUrl",
+      "label": "Button URL"
+    },
+    {
+      "type": "select",
+      "id": "backgroundColor",
+      "label": "Background Color",
+      "options": [
+        {"value": "primary", "label": "Primary"},
+        {"value": "secondary", "label": "Secondary"},
+        {"value": "accent", "label": "Accent"}
+      ],
+      "default": "primary"
+    },
+    {
+      "type": "checkbox",
+      "id": "showVideo",
+      "label": "Show Video",
+      "default": false
+    }
+  ],
+  "presets": [
+    {
+      "name": "Hero Banner",
+      "category": "Banners"
     }
   ]
 }
+{% endschema %}
 ```
 
-## 🛠️ Available Commands
+## 🛡️ Manual Edit Protection
 
-| Command | Description |
-|---------|-------------|
-| `npm run watch` | 📺 Watch mode - Auto-generates Liquid templates |
-| `npm run dev` | 🛍️ Shopify theme dev server |
-| `npm run build` | 📦 Build for production |
-| `npm run shopify:push` | 🚀 Deploy to Shopify store |
-| `./start-dev.ps1` | 🪟 Automatic setup (Windows) |
-| `./start-dev.sh` | 🐧 Automatic setup (Mac/Linux) |
+Reactpify intelligently detects manual edits and preserves them:
 
-## 🧩 Reusable Components
-
-Reactpify includes **example components** following Atomic Design principles:
-
-```tsx
-// Use pre-built atoms and molecules
-import { Button, Input, SearchBox, ProductCard } from '@components';
-
-export const MyComponent = () => {
-  return (
-    <div>
-      <SearchBox 
-        placeholder="Search products..." 
-        onSearch={(query) => console.log(query)} 
-      />
-      <ProductCard 
-        title="Amazing Product"
-        price="$29.99"
-        imageUrl="/product.jpg"
-        onAddToCart={() => console.log('Added!')}
-      />
-    </div>
-  );
-};
-```
-
-**Included examples:**
-- **Atoms**: `Button`, `Input` - Basic building blocks
-- **Molecules**: `SearchBox`, `ProductCard` - Combined components
-
-*Feel free to modify or delete these and create your own!*
-
-## 🔥 Redux State Management
-
-Reactpify includes **Redux Toolkit** setup with example slices for common e-commerce needs:
-
-```tsx
-// Use Redux in your components
-import { useAppSelector, useAppDispatch, addToCart } from '../../redux';
-
-export const AddToCartButton = ({ product }) => {
-  const dispatch = useAppDispatch();
-  const cartItems = useAppSelector(state => state.cart.items);
-  
-  const handleAddToCart = () => {
-    dispatch(addToCart({
-      id: product.id,
-      variantId: product.variants[0].id,
-      title: product.title,
-      price: product.price,
-      quantity: 1
-    }));
-  };
-
-  return (
-    <button onClick={handleAddToCart}>
-      Add to Cart ({cartItems.length})
-    </button>
-  );
-};
-```
-
-**Included slices:**
-- **Cart**: `addToCart`, `removeFromCart`, `updateQuantity`, `toggleCart`
-- **User**: `setUser`, `addToWishlist`, `addToRecentlyViewed`
-- **UI**: `setMenuOpen`, `openQuickView`, `addToast`, `setLoading`
-
-*Redux is automatically integrated with all components via Provider!*
-
-## 💡 Real-World Examples
-
-### Example 1: Product Quick View Modal
-
-```tsx
-// src/components/quick-view/QuickView.tsx
-export const QuickView = ({ productHandle, showPrice = true }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [product, setProduct] = useState(null);
-
-  const loadProduct = async () => {
-    const response = await fetch(`/products/${productHandle}.js`);
-    setProduct(await response.json());
-  };
-
-  return (
-    <>
-      <button onClick={() => { setIsOpen(true); loadProduct(); }}>
-        Quick View
-      </button>
-      {isOpen && (
-        <div className="modal">
-          {/* Your modal content */}
-        </div>
-      )}
-    </>
-  );
-};
-```
-
-**Usage in any product card:**
 ```liquid
-<div data-component-root="QuickView">
-  <script type="application/json" data-section-data>
-    {
-      "productHandle": "{{ product.handle }}",
-      "showPrice": true
-    }
-  </script>
-</div>
-```
+{% comment %} MANUAL EDIT {% endcomment %}
+<!-- This file won't be auto-regenerated -->
 
-### Example 2: Live Search with Filters
-
-```tsx
-// src/components/search/LiveSearch.tsx
-export const LiveSearch = ({ collectionHandle, showFilters = true }) => {
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState([]);
-  const [filters, setFilters] = useState({});
-
-  const search = async () => {
-    // Implement your search logic
-    const response = await fetch(`/search?q=${query}&collection=${collectionHandle}`);
-    setResults(await response.json());
-  };
-
-  return (
-    <div className="live-search">
-      <input 
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search products..."
-      />
-      {/* Results and filters */}
-    </div>
-  );
-};
-```
-
-### Example 3: Shopping Cart with Real-time Updates
-
-```tsx
-// src/components/cart/MiniCart.tsx
-export const MiniCart = ({ showItemCount = true }) => {
-  const [cart, setCart] = useState({ items: [], total_price: 0 });
-
-  const addToCart = async (variantId: string, quantity: number) => {
-    await fetch('/cart/add.js', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: variantId, quantity })
-    });
-    
-    // Refresh cart
-    const response = await fetch('/cart.js');
-    setCart(await response.json());
-  };
-
-  return (
-    <div className="mini-cart">
-      {showItemCount && <span>({cart.items.length})</span>}
-      {/* Cart dropdown */}
-    </div>
-  );
-};
+<section class="custom-hero">
+  <!-- Your custom Liquid code here -->
+  {% for product in collections.featured.products limit: 3 %}
+    <div>{{ product.title }}</div>
+  {% endfor %}
+</section>
 ```
 
 ## ⚙️ Configuration
 
-### Shopify CLI Setup
-
-Make sure you have Shopify CLI installed:
-
-```bash
-npm install -g @shopify/cli @shopify/theme
-```
-
-### Environment Setup
-
-Update `package.json` with your store details:
-
-```json
-{
-  "scripts": {
-    "dev": "shopify theme dev --store=your-store.myshopify.com",
-    "shopify:push": "npm run build && shopify theme push --store=your-store.myshopify.com"
-  }
-}
-```
-
-### TypeScript Configuration
-
-Reactpify includes full TypeScript support. Extend types as needed:
+### Vite Configuration
 
 ```typescript
-// src/utils/interfaces/custom.ts
-export interface CustomComponentProps {
-  // Your custom interfaces
-}
-```
+// vite.config.ts
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { autoLiquidGenerator } from 'reactpifyjs/vite-plugins/auto-liquid-generator';
+import { autoComponentRegistry } from 'reactpifyjs/vite-plugins/auto-component-registry';
 
-## 🚧 Advanced Usage
-
-### Custom Rendering Logic
-
-Override the default rendering for specific components:
-
-```tsx
-// src/utils/helpers/customRenderer.tsx
-import { registerComponent } from './renderComponents';
-import { MyAdvancedComponent } from '../components/MyAdvancedComponent';
-
-// Custom registration with initialization logic
-registerComponent('MyAdvancedComponent', (props) => {
-  // Custom initialization
-  return <MyAdvancedComponent {...props} />;
+export default defineConfig({
+  plugins: [
+    react(),
+    autoLiquidGenerator(),
+    autoComponentRegistry()
+  ],
+  // ... other config
 });
 ```
 
-### Global State Management
+### Tailwind Configuration
 
-Add Redux or Zustand for complex state:
-
-```bash
-npm install @reduxjs/toolkit react-redux
-```
-
-```tsx
-// src/store/store.ts
-import { configureStore } from '@reduxjs/toolkit';
-
-export const store = configureStore({
-  reducer: {
-    // Your reducers
+```javascript
+// tailwind.config.js
+export default {
+  content: [
+    "./src/**/*.{js,ts,jsx,tsx}",
+    "./sections/**/*.liquid",
+    "./snippets/**/*.liquid"
+  ],
+  corePlugins: {
+    preflight: false, // Prevents conflicts with theme CSS
+  },
+  important: '[data-component-root]', // Scopes to components only
+  theme: {
+    extend: {
+      colors: {
+        primary: {
+          500: '#3b82f6',
+          600: '#2563eb',
+          700: '#1d4ed8',
+        }
+      }
+    }
   }
-});
+};
 ```
 
-### Custom Liquid Generation
+## 🔄 Development Workflow
 
-Extend the auto-generation for complex use cases:
-
-```typescript
-// vite-plugins/custom-liquid-generator.ts
-export function customLiquidGenerator() {
-  // Your custom generation logic
-}
-```
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**Components not appearing in Theme Editor?**
-- Run `npm run build` to regenerate Liquid files
-- Check that `reactpify.js` is loaded in your theme.liquid
-
-**TypeScript errors?**
-- Ensure all props are properly typed in interfaces
-- Check `tsconfig.json` includes all necessary paths
-
-**Styles not working?**
-- Add your CSS to `src/styles/` or use CSS-in-JS
-- Include stylesheets in your component or globally
-
-**Development server not starting?**
-- Verify Shopify CLI is installed and authenticated
-- Check your store URL in package.json scripts
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-## 🚀 Deployment & Production
-
-### Development Workflow
+### Watch Mode
 ```bash
-# Start development (2 terminals)
-npm run watch    # Auto-builds React + generates Liquid
-npm run dev      # Shopify live preview with hot reload
-
-# Use automation scripts
-./start-dev.ps1  # Windows
-./start-dev.sh   # Mac/Linux
+npm run watch
 ```
+- Auto-regenerates Liquid templates
+- Preserves manual edits
+- Hot-reloads React components
 
-### Production Deployment
+### Build for Production
 ```bash
-# Build for production
 npm run build
+```
 
-# Deploy to development theme
-npm run shopify:push:dev
-
-# Deploy to production theme  
-npm run shopify:push:prod
-
-# Deploy to main theme
+### Deploy to Shopify
+```bash
 npm run shopify:push
 ```
 
-### Environment Configuration
+## 🛍️ Metaobject Integration
+
+Work with Shopify metaobjects seamlessly:
+
+```tsx
+interface ProductFeatureProps {
+  metaobject: {
+    title: string;
+    description: string;
+    features: string[];
+    image: string;
+  };
+}
+
+export const ProductFeature: React.FC<ProductFeatureProps> = ({ metaobject }) => {
+  return (
+    <div className="product-feature">
+      <img src={metaobject.image} alt={metaobject.title} />
+      <h3>{metaobject.title}</h3>
+      <p>{metaobject.description}</p>
+      <ul>
+        {metaobject.features.map((feature, index) => (
+          <li key={index}>{feature}</li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+```
+
+## 📚 CLI Commands
+
 ```bash
-# Edit .env file with your store details
-SHOPIFY_STORE=your-store.myshopify.com
-SHOPIFY_DEV_THEME_ID=123456789
-SHOPIFY_PROD_THEME_ID=987654321
+# Initialize Reactpify in existing theme
+npx reactpifyjs init
+
+# Create new component
+npx reactpifyjs create <component-name>
+
+# Generate Liquid from React component
+npx reactpifyjs generate <component-name>
+
+# Clean generated files
+npx reactpifyjs clean
 ```
 
-### CI/CD Integration
-```yaml
-# Example GitHub Actions workflow
-name: Deploy to Shopify
-on: [push]
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-      - run: npm install
-      - run: npm run build
-      - run: shopify theme push
-        env:
-          SHOPIFY_CLI_THEME_TOKEN: ${{ secrets.SHOPIFY_TOKEN }}
+## 🎨 Styling Best Practices
+
+### Component Isolation
+
+```css
+/* Components are automatically wrapped */
+.reactpify-component {
+  isolation: isolate;
+  /* Your component styles won't leak */
+}
 ```
 
-### Publishing as NPM Package *(Future)*
+### Tailwind Usage
 
-Want to publish your own version?
+```tsx
+// ✅ Good - Scoped to component
+<div className="bg-blue-500 text-white p-4 rounded-lg">
+  Content
+</div>
 
-```bash
-# Update package.json with your details
-npm version patch
-npm publish
-
-# Create CLI tool for users
-npm link
-npx your-reactpify-cli init
+// ✅ Good - Custom utility classes
+<div className="btn-primary card-gradient">
+  Content  
+</div>
 ```
 
----
+## 🚨 Troubleshooting
+
+### Common Issues
+
+**CSS not loading:**
+```html
+<!-- Ensure this is in your theme.liquid -->
+<link rel="stylesheet" href="{{ 'reactpify.css' | asset_url }}">
+<script type="module" src="{{ 'reactpify.js' | asset_url }}"></script>
+```
+
+**Component not rendering:**
+- Check browser console for errors
+- Verify component is registered in `main.tsx`
+- Ensure `data-component-root` attribute matches component name
+
+**Build errors:**
+- Run `npm run clean` and rebuild
+- Check for TypeScript errors
+- Verify all imports are correct
+
+## 📝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT © [Reactpify](https://github.com/reactpify)
 
-## 🙋‍♂️ Support
+## 🙏 Acknowledgments
 
-- 📚 **Documentation**: [Full documentation](https://reactpify.dev)
-- 🐛 **Bug Reports**: [GitHub Issues](https://github.com/yourusername/reactpify/issues)
-- 💬 **Discord**: [Join our community](https://discord.gg/reactpify)
-- 📧 **Email**: support@reactpify.dev
-
-## 🌟 Show Your Support
-
-If Reactpify helps you build better Shopify stores, please give it a ⭐ on GitHub!
+- [Vite](https://vitejs.dev/) - Blazing fast build tool
+- [React](https://reactjs.org/) - UI library
+- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS
+- [Shopify](https://shopify.dev/) - Ecommerce platform
 
 ---
 
-**Built to make Shopify + React development effortless** 💙
+**Made with ❤️ for the Shopify community**
 
-### What's Next?
-
-- 🔮 **CLI tool** for easier project initialization
-- 🎨 **Component library** with pre-built Shopify components  
-- 🚀 **Performance optimizations** for larger stores
-- 📱 **Mobile-specific components** and optimizations
-
-[Get Started](#quick-start) | [Examples](#real-world-examples) | [Contributing](#contributing)
+[⭐ Star this repo](https://github.com/leb90/reactpify) if you find it helpful!

@@ -388,7 +388,7 @@ function generateLiquidContent(
   .${kebabName}-container:has(.reactpify-component) .${kebabName}-fallback {
     display: none !important;
   }
-  
+
   /* Additional fallback cleanup */
   [data-component-root="${componentName}"]:has(.reactpify-component) .${kebabName}-fallback {
     display: none !important;
@@ -564,183 +564,91 @@ function generateSmartFallback(
   reactContent: string
 ): string {
   try {
+    console.log(`🎯 [TAILWIND] Extracting classes from ${componentName}...`);
+    
     const titleProp = props.find(p => p.name.toLowerCase().includes('title'));
     const subtitleProp = props.find(p => p.name.toLowerCase().includes('subtitle'));
 
-    // Generate fallback based on actual React styles for specific components
-    if (componentName === 'WelcomeBanner') {
-      return `<div style="
-        position: relative;
-        overflow: hidden;
-        border-radius: 1.5rem;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-        backdrop-filter: blur(4px);
-        background: linear-gradient(to bottom right, #3b82f6, #2563eb, #7c3aed);
-        color: white;
-        padding: 2rem;
-    text-align: center;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        margin: 2rem auto;
-        max-width: 800px;
-      ">
-        <div style="position: relative; z-index: 10;">
-          <h2 style="
-            font-size: 3rem;
-            font-weight: 900;
-            margin-bottom: 1.5rem;
-            line-height: 1;
-            background: linear-gradient(to right, white, white, rgba(255,255,255,0.9));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
-          ">
-            🚀 {% if title %}{{ title }}{% else %}Welcome to Reactpify!{% endif %}
-          </h2>
+    // EXTRACT TAILWIND CLASSES FROM REACT COMPONENT
+    // Find all div className patterns
+    const divMatches = reactContent.match(/<div[^>]*className[=\s]*["`{][^"`}>]*["`}][^>]*>/g) || [];
+    
+    // Extract main container (usually first or with w-full)
+    let containerClasses = 'max-w-md mx-auto p-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-xl text-white text-center';
+    
+    for (const match of divMatches) {
+      const classMatch = match.match(/className[=\s]*["`{]([^"`}>]*)["`}]/);
+      if (classMatch && classMatch[1]) {
+        const classes = classMatch[1]
+          .replace(/\$\{[^}]*\}/g, '') // Remove template literals
+          .replace(/\?[^:]*:/g, '') // Remove ternary operators
+          .replace(/\s+/g, ' ')
+          .trim();
+        
+        if (classes.includes('w-full') || classes.includes('max-w-') || classes.includes('py-')) {
+          containerClasses = classes;
+          break;
+        }
+      }
+    }
+    
+    // Find title/heading classes
+    const titleMatch = reactContent.match(/<h[1-6][^>]*className[=\s]*["`']([^"`']*)["`'][^>]*>/);
+    const titleClasses = titleMatch ? titleMatch[1] : 'text-3xl font-bold mb-4';
+    
+    // Find paragraph classes
+    const paragraphMatch = reactContent.match(/<p[^>]*className[=\s]*["`']([^"`']*)["`'][^>]*>/);
+    const paragraphClasses = paragraphMatch ? paragraphMatch[1] : 'text-lg opacity-90 mb-6';
+    
+    console.log(`🎨 [TAILWIND] Found classes:
+      Container: "${containerClasses}"
+      Title: "${titleClasses}"
+      Paragraph: "${paragraphClasses}"`);
+      
+    // Detect if component needs wrapper structure
+    const needsWrapper = containerClasses.includes('w-full') || containerClasses.includes('py-16') || containerClasses.includes('py-8');
+    
+    if (needsWrapper) {
+      // Complex layout - use the already extracted container classes as wrapper
+      const wrapperClasses = containerClasses; // Use the extracted classes directly
+      
+      // Find inner container (usually next div with max-w)
+      const innerMatch = reactContent.match(/<div[^>]*className[=\s]*["`']([^"`']*max-w-[^"`']*)["`'][^>]*>/);
+      const innerClasses = innerMatch ? innerMatch[1] : 'max-w-4xl mx-auto text-center';
+      
+      return `<div class="${wrapperClasses}">
+        <div class="${innerClasses}">
+          <h${titleClasses.includes('text-5xl') || titleClasses.includes('text-6xl') ? '1' : '2'} class="${titleClasses}">
+            ${titleClasses.includes('text-5xl') ? '🎯' : '✨'} {% if ${titleProp?.name.toLowerCase() || 'title'} %}{{ ${titleProp?.name.toLowerCase() || 'title'} }}{% else %}${componentName}{% endif %}
+          </h${titleClasses.includes('text-5xl') || titleClasses.includes('text-6xl') ? '1' : '2'}>
           
-          {% if subtitle %}
-            <p style="
-              font-size: 1.25rem;
-              margin-bottom: 2rem;
-              opacity: 0.9;
-              line-height: 1.625;
-              max-width: 600px;
-              margin-left: auto;
-              margin-right: auto;
-            ">{{ subtitle }}</p>
+          {% if ${subtitleProp?.name.toLowerCase() || 'subtitle'} %}
+            <p class="${paragraphClasses}">{{ ${subtitleProp?.name.toLowerCase() || 'subtitle'} }}</p>
           {% endif %}
           
-          <p style="
-            font-size: 0.875rem;
-            opacity: 0.8;
-            margin-top: 2rem;
-            padding: 0.5rem 1rem;
-            background: rgba(255,255,255,0.1);
-            border-radius: 0.5rem;
-            display: inline-block;
-          ">
-            ✨ React component loading...
-          </p>
+          <div class="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-sm">
+            <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+            🚀 React component loading...
+          </div>
+        </div>
+      </div>`;
+    } else {
+      // Simple card component - use container classes directly
+      return `<div class="${containerClasses}">
+        <h${titleClasses.includes('text-4xl') ? '1' : '2'} class="${titleClasses}">
+          ✨ {% if ${titleProp?.name.toLowerCase() || 'title'} %}{{ ${titleProp?.name.toLowerCase() || 'title'} }}{% else %}${componentName}{% endif %}
+        </h${titleClasses.includes('text-4xl') ? '1' : '2'}>
+        
+        {% if ${subtitleProp?.name.toLowerCase() || 'subtitle'} %}
+          <p class="${paragraphClasses}">{{ ${subtitleProp?.name.toLowerCase() || 'subtitle'} }}</p>
+        {% endif %}
+        
+        <div class="inline-flex items-center gap-2 px-3 py-1 bg-white/20 rounded-full text-sm mt-4">
+          <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+          🚀 React component loading...
         </div>
       </div>`;
     }
-
-    if (componentName === 'NewsletterSignup') {
-      return `<div style="
-    position: relative;
-        overflow: hidden;
-        border-radius: 1.5rem;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-        backdrop-filter: blur(4px);
-        background: linear-gradient(to bottom right, #6366f1, #8b5cf6, #ec4899);
-        color: white;
-        padding: 2rem;
-        text-align: center;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        margin: 2rem auto;
-        max-width: 500px;
-      ">
-        <div style="position: relative; z-index: 10;">
-          <h2 style="
-            font-size: 2rem;
-            font-weight: 900;
-            margin-bottom: 1rem;
-            line-height: 1.25;
-            background: linear-gradient(to right, white, white, rgba(255,255,255,0.9));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-          ">
-            💌 {% if title %}{{ title }}{% else %}Stay in the Loop!{% endif %}
-          </h2>
-          
-          {% if subtitle %}
-            <p style="
-              font-size: 1rem;
-              margin-bottom: 2rem;
-              opacity: 0.9;
-              line-height: 1.625;
-            ">{{ subtitle }}</p>
-          {% endif %}
-          
-          <form style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem;">
-            <input 
-              type="email" 
-              placeholder="Enter your email address"
-              style="
-                padding: 0.875rem 1rem;
-                border: none;
-                border-radius: 0.75rem;
-                font-size: 1rem;
-                background: rgba(255,255,255,0.95);
-                color: #1f2937;
-                border: 2px solid rgba(255,255,255,0.3);
-                transition: all 0.3s ease;
-              "
-              required
-            >
-            <button 
-              type="submit"
-              style="
-                padding: 0.875rem 1.5rem;
-                background: rgba(255,255,255,0.15);
-                border: 2px solid rgba(255,255,255,0.3);
-                border-radius: 0.75rem;
-                color: white;
-                font-weight: 700;
-                cursor: pointer;
-                backdrop-filter: blur(10px);
-                transition: all 0.3s ease;
-                font-size: 1rem;
-              "
-            >
-              Subscribe Now! 🚀
-            </button>
-          </form>
-          
-          <p style="
-            font-size: 0.75rem;
-            opacity: 0.8;
-            padding: 0.5rem 1rem;
-            background: rgba(255,255,255,0.1);
-            border-radius: 0.5rem;
-            display: inline-block;
-          ">
-            ✨ React component loading...
-          </p>
-        </div>
-      </div>`;
-    }
-
-    // Default fallback for other components
-    return `<div style="
-      position: relative;
-      overflow: hidden;
-      border-radius: 1rem;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 2rem;
-      text-align: center;
-      margin: 2rem auto;
-      max-width: 500px;
-    ">
-      <h2 style="
-        font-size: 1.5rem;
-        font-weight: bold;
-        margin-bottom: 1rem;
-      ">
-        ✨ {% if title %}{{ title }}{% else %}${componentName}{% endif %}
-      </h2>
-      
-      {% if subtitle %}
-        <p style="margin-bottom: 1.5rem; opacity: 0.9;">{{ subtitle }}</p>
-      {% endif %}
-      
-      <p style="font-size: 0.875rem; opacity: 0.8;">
-        🚀 React component loading...
-      </p>
-    </div>`;
 
   } catch (error) {
     console.error(`❌ [ERROR] generateSmartFallback failed for ${componentName}:`, error);
@@ -795,7 +703,7 @@ function checkAllComponents() {
         const kebabName = componentName.replace(/([A-Z])/g, '-$1').toLowerCase().replace(/^-/, '');
         const liquidFileName = `section.${kebabName}.liquid`;
       const liquidExists = files.includes(liquidFileName);
-      
+
       if (!liquidExists) {
         console.log(`🔍 Found React component without Liquid template: ${componentName}`);
         generateLiquidTemplate(componentName, componentDir);

@@ -1,28 +1,55 @@
 {
-  "name": "reactpify",
-  "version": "1.0.0",
-  "description": "The easiest way to add React components to any Shopify theme",
+  "name": "reactpifyjs",
+  "version": "1.0.3",
+  "description": "🚀 The easiest way to add React components to any Shopify theme with Vite, Tailwind CSS, and intelligent Liquid auto-generation",
   "keywords": [
     "shopify",
     "react",
     "liquid",
     "ecommerce",
     "theme",
-    "components"
+    "components",
+    "vite",
+    "tailwind",
+    "shopify-theme",
+    "react-shopify",
+    "auto-generation",
+    "metaobjects"
   ],
-  "author": "Your Name <your.email@example.com>",
+  "author": "leb90 <leb90@example.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/reactpify.git"
+    "url": "https://github.com/leb90/reactpify.git"
   },
-  "homepage": "https://github.com/yourusername/reactpify#readme",
+  "homepage": "https://github.com/leb90/reactpify#readme",
   "bugs": {
-    "url": "https://github.com/yourusername/reactpify/issues"
+    "url": "https://github.com/leb90/reactpify/issues"
+  },
+  "main": "vite.config.ts",
+  "bin": {
+    "reactpify": "./scripts/setup.js"
+  },
+  "files": [
+    "vite-plugins/",
+    "src/",
+    "scripts/",
+    "README.md",
+    "LICENSE",
+    "tailwind.config.js",
+    "postcss.config.js",
+    "tsconfig.json",
+    "vite.config.ts"
+  ],
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   },
   "type": "module",
   "scripts": {
-    "watch": "vite build --watch --mode development",
+    "watch": "node scripts/watch.js",
+    "watch:simple": "npx tailwindcss -i src/styles/main.css -o assets/reactpify.css --watch --content \"./sections/**/*.liquid\" --content \"./src/**/*.{js,ts,jsx,tsx}\"",
+    "watch:vite": "vite build --watch --mode development",
     "build": "vite build",
     "dev": "shopify theme dev --store=test-forleb.myshopify.com",
     "dev:theme": "shopify theme dev --store=test-forleb.myshopify.com --theme=150788800766",
@@ -65,7 +92,8 @@
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.3.0",
     "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.11",
+    "postcss-cli": "^11.0.1",
+    "tailwindcss": "^3.4.0",
     "tsx": "^4.20.3",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.35.1",
