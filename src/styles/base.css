@@ -1,0 +1,6 @@
+/* Base styles for Reactpify */
+[data-component-root] {
+  isolation: isolate;
+  position: relative;
+  box-sizing: border-box;
+} 

@@ -1,0 +1,85 @@
+/* Utilidades específicas de Reactpify */
+
+/* Screen reader only */
+.reactpify-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Debug mode */
+[data-reactpify-debug="true"] [data-component-root] {
+  outline: 2px dashed var(--reactpify-accent);
+  outline-offset: 2px;
+}
+
+[data-reactpify-debug="true"] [data-component-root]::after {
+  content: attr(data-component-root);
+  position: absolute;
+  top: -1.5rem;
+  left: 0;
+  background: var(--reactpify-accent);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-family: ui-monospace, monospace;
+  border-radius: 0.25rem;
+  z-index: 10000;
+  pointer-events: none;
+}
+
+/* Indicadores de estado */
+[data-component-root]::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 4px;
+  background: var(--reactpify-accent);
+  border-radius: 50%;
+  opacity: 0.5;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+[data-component-root].reactpify-hydrated::before {
+  background: var(--reactpify-success);
+  animation: reactpify-pulse 2s infinite;
+}
+
+@keyframes reactpify-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* Container utilities */
+.reactpify-container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.reactpify-container-sm {
+  max-width: 640px;
+}
+
+.reactpify-container-md {
+  max-width: 768px;
+}
+
+.reactpify-container-lg {
+  max-width: 1024px;
+}
+
+.reactpify-container-xl {
+  max-width: 1280px;
+} 

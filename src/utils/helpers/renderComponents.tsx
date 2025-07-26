@@ -1,141 +1,202 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
-import { store } from '../../redux/store';
+import { store } from '../../redux';
 
-/**
- * Central rendering system
- * 
- * Finds elements with data-component-root, extracts JSON from data-section-data script
- * and renders the corresponding React component.
- */
-
-interface ComponentData {
-  [key: string]: any;
-}
+type ComponentType = React.ComponentType<any>;
 
 interface ComponentRegistry {
-  [componentName: string]: React.ComponentType<any>;
+  [key: string]: ComponentType;
 }
 
-let componentRegistry: ComponentRegistry = {};
+const componentRegistry: ComponentRegistry = {};
 
 /**
- * Register a component in the global registry
+ * Registra un componente en el sistema
  */
-export const registerComponent = (name: string, component: React.ComponentType<any>) => {
+export function registerComponent(name: string, component: ComponentType) {
   componentRegistry[name] = component;
-};
+  console.log(`🔧 Component registered: ${name}`);
+}
 
 /**
- * Render a specific component
- * @param rootElementSelector - CSS selector of the container
- * @param componentName - Name of the component to render
- * @param Component - React component (optional, can be obtained from registry)
+ * Obtiene el registro completo de componentes
  */
-export const renderComponent = <T extends ComponentData>(
-  rootElementSelector: string,
-  componentName?: string,
-  Component?: React.ComponentType<T>
-): void => {
-  const rootElements = document.querySelectorAll(rootElementSelector);
-  
-  rootElements.forEach((rootElement) => {
-    try {
-      const dataScript = rootElement.querySelector('[data-section-data]') as HTMLScriptElement;
-      
-      if (!dataScript || !dataScript.textContent) {
-        console.warn(`No data found for component in: ${rootElementSelector}`);
-        return;
-      }
-
-      let sectionData: T;
-      try {
-        sectionData = JSON.parse(dataScript.textContent);
-      } catch (error) {
-        console.error('Error parsing component data:', error);
-        return;
-      }
-
-      let ComponentToRender = Component;
-      
-      if (!ComponentToRender && componentName) {
-        ComponentToRender = componentRegistry[componentName];
-      }
-      
-      if (!ComponentToRender && sectionData.componentName) {
-        ComponentToRender = componentRegistry[sectionData.componentName];
-      }
-
-      if (!ComponentToRender) {
-        console.error(`Component not found: ${componentName || sectionData.componentName || 'unknown'}`);
-        return;
-      }
-
-      const root = createRoot(rootElement);
-      
-      // Create wrapper with auto-styling
-      const WrappedComponent = () => (
-        <div className="reactpify-component">
-          <ComponentToRender {...sectionData} />
-        </div>
-      );
-      
-      root.render(
-        <Provider store={store}>
-          <WrappedComponent />
-        </Provider>
-      );
-      
-      console.log(`✅ Rendered component: ${componentName || sectionData.componentName}`);
-      
-    } catch (error) {
-      console.error(`Error rendering component in ${rootElementSelector}:`, error);
-    }
-  });
-};
+export function getComponentRegistry(): ComponentRegistry {
+  return componentRegistry;
+}
 
 /**
- * Auto-render all components found on the page
+ * Maneja la hidratación de un componente específico
  */
-export const autoRenderComponents = (): void => {
-  const componentRoots = document.querySelectorAll('[data-component-root]');
+function hydrateComponent(container: HTMLElement, componentName: string, props: any) {
+  const Component = componentRegistry[componentName];
   
-  componentRoots.forEach((element) => {
-    const componentName = element.getAttribute('data-component-root');
-    if (componentName && componentRegistry[componentName]) {
-      renderComponent(`[data-component-root="${componentName}"]`, componentName);
-    }
-  });
-};
-
-/**
- * Initialize the rendering system
- */
-export const initRenderSystem = (): void => {
-  console.log('🚀 Initializing React render system...');
-  
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', autoRenderComponents);
-  } else {
-    autoRenderComponents();
+  if (!Component) {
+    console.error(`❌ Component not found: ${componentName}`);
+    container.innerHTML = `
+      <div class="reactpify-error">
+        <strong>Error:</strong> Component "${componentName}" not found
+      </div>
+    `;
+    return;
   }
-  
-  window.addEventListener('popstate', autoRenderComponents);
-  
-  console.log(`📦 Registered components: ${Object.keys(componentRegistry).join(', ')}`);
-};
+
+  try {
+    // Marcar como loading
+    container.classList.add('reactpify-loading');
+    
+    // Crear root y renderizar
+    const root = createRoot(container);
+    
+    root.render(
+      <Provider store={store}>
+        <div className="reactpify-component">
+          <Component {...props} />
+        </div>
+      </Provider>
+    );
+
+    // Marcar como hidratado después del render
+    setTimeout(() => {
+      container.classList.remove('reactpify-loading');
+      container.classList.add('reactpify-hydrated');
+      
+      // Evento personalizado para notificar hidratación
+      const event = new CustomEvent('reactpify:hydrated', {
+        detail: { componentName, props }
+      });
+      container.dispatchEvent(event);
+      
+      console.log(`✅ Component hydrated: ${componentName}`);
+    }, 0);
+
+  } catch (error) {
+    console.error(`❌ Error hydrating component ${componentName}:`, error);
+    container.classList.remove('reactpify-loading');
+    container.classList.add('reactpify-error');
+    container.innerHTML = `
+      <div class="reactpify-error">
+        <strong>Hydration Error:</strong> ${componentName}<br>
+        <small>${error instanceof Error ? error.message : 'Unknown error'}</small>
+      </div>
+    `;
+  }
+}
 
 /**
- * Get the component registry (for debugging)
+ * Inicializa el sistema de renderizado
  */
-export const getComponentRegistry = (): ComponentRegistry => {
-  return { ...componentRegistry };
-};
+export function initRenderSystem() {
+  console.log('🚀 Initializing Reactpify render system...');
+  
+  // Detectar modo debug
+  const isDebugMode = window.location.search.includes('reactpify-debug') || 
+                     localStorage.getItem('reactpify-debug') === 'true';
+  
+  if (isDebugMode) {
+    document.documentElement.setAttribute('data-reactpify-debug', 'true');
+    console.log('🐛 Debug mode enabled');
+  }
 
-/**
- * Clear the registry (useful for testing)
- */
-export const clearComponentRegistry = (): void => {
-  componentRegistry = {};
-}; 
+  // Función para procesar componentes
+  function processComponents() {
+    const components = document.querySelectorAll('[data-component-root]');
+    
+    if (components.length === 0) {
+      console.log('ℹ️ No components found on this page');
+      return;
+    }
+
+    console.log(`🔍 Found ${components.length} component(s) to hydrate`);
+
+    components.forEach((container) => {
+      const componentName = container.getAttribute('data-component-root');
+      
+      if (!componentName) {
+        console.warn('⚠️ Component container missing data-component-root attribute', container);
+        return;
+      }
+
+      // Verificar si ya está hidratado
+      if (container.classList.contains('reactpify-hydrated')) {
+        console.log(`⏭️ Component already hydrated: ${componentName}`);
+        return;
+      }
+
+      // Buscar datos del componente
+      const dataScript = container.querySelector('script[data-section-data]');
+      let props = {};
+
+      if (dataScript) {
+        try {
+          props = JSON.parse(dataScript.textContent || '{}');
+          console.log(`📄 Props loaded for ${componentName}:`, props);
+        } catch (error) {
+          console.warn(`⚠️ Failed to parse props for ${componentName}:`, error);
+        }
+      } else {
+        console.log(`ℹ️ No props found for ${componentName}, using defaults`);
+      }
+
+      // Hidratar el componente
+      hydrateComponent(container as HTMLElement, componentName, props);
+    });
+  }
+
+  // Procesar componentes existentes
+  processComponents();
+
+  // Observer para componentes dinámicos (ej: AJAX loads)
+  const observer = new MutationObserver((mutations) => {
+    let hasNewComponents = false;
+    
+    mutations.forEach((mutation) => {
+      mutation.addedNodes.forEach((node) => {
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          const element = node as Element;
+          
+          // Verificar si es un componente o contiene componentes
+          if (element.hasAttribute?.('data-component-root') || 
+              element.querySelector?.('[data-component-root]')) {
+            hasNewComponents = true;
+          }
+        }
+      });
+    });
+
+    if (hasNewComponents) {
+      console.log('🔄 New components detected, processing...');
+      setTimeout(processComponents, 0);
+    }
+  });
+
+  // Observar cambios en el DOM
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+
+  // Event listeners globales
+  window.addEventListener('reactpify:refresh', processComponents);
+  
+  // API global para debugging
+  if (isDebugMode) {
+    (window as any).reactpify = {
+      registry: componentRegistry,
+      refresh: processComponents,
+      hydrate: hydrateComponent,
+      enableDebug: () => {
+        document.documentElement.setAttribute('data-reactpify-debug', 'true');
+        localStorage.setItem('reactpify-debug', 'true');
+      },
+      disableDebug: () => {
+        document.documentElement.removeAttribute('data-reactpify-debug');
+        localStorage.removeItem('reactpify-debug');
+      }
+    };
+  }
+
+  console.log('✅ Reactpify render system initialized');
+  console.log(`📦 ${Object.keys(componentRegistry).length} component(s) registered:`, Object.keys(componentRegistry));
+} 

@@ -25,6 +25,7 @@ build/
 
 # Shopify CLI
 .shopify/
+
 .shopifyignore
 
 # Compiled React bundle (auto-generated)

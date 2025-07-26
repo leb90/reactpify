@@ -1,0 +1,54 @@
+@keyframes reactpify-fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes reactpify-fadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes reactpify-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes reactpify-bounce {
+  0%, 100% {
+    transform: translateY(-25%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: none;
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+.reactpify-fade-in {
+  animation: reactpify-fadeIn 0.3s ease-out;
+}
+
+.reactpify-fade-out {
+  animation: reactpify-fadeOut 0.3s ease-out;
+}
+
+.reactpify-spin {
+  animation: reactpify-spin 1s linear infinite;
+}
+
+.reactpify-bounce {
+  animation: reactpify-bounce 1s infinite;
+} 

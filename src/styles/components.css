@@ -1,0 +1,86 @@
+/* Componentes específicos de Reactpify */
+
+/* Reset específico para elementos dentro de componentes */
+[data-component-root] *,
+[data-component-root] *::before,
+[data-component-root] *::after {
+  box-sizing: border-box;
+  border-width: 0;
+  border-style: solid;
+  border-color: #e5e7eb;
+}
+
+[data-component-root] h1,
+[data-component-root] h2,
+[data-component-root] h3,
+[data-component-root] h4,
+[data-component-root] h5,
+[data-component-root] h6 {
+  font-size: inherit;
+  font-weight: inherit;
+  margin: 0;
+}
+
+[data-component-root] p {
+  margin: 0;
+}
+
+[data-component-root] button {
+  background-color: transparent;
+  background-image: none;
+  border: 0;
+  color: inherit;
+  font-family: inherit;
+  font-size: 100%;
+  font-weight: inherit;
+  line-height: inherit;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* Utilidades para glassmorphism */
+.reactpify-glassmorphism {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Text gradients */
+.reactpify-text-gradient {
+  background: linear-gradient(45deg, var(--reactpify-primary), var(--reactpify-accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Estados de loading */
+.reactpify-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: var(--reactpify-gray-500);
+}
+
+.reactpify-loading::before {
+  content: '';
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: reactpify-spin 1s linear infinite;
+  margin-right: 0.5rem;
+}
+
+/* Estados de error */
+.reactpify-error {
+  padding: 1rem;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
+  color: #dc2626;
+  font-family: ui-monospace, monospace;
+  font-size: 0.875rem;
+} 

@@ -2,7 +2,7 @@ import React from 'react';
 import { registerComponent, initRenderSystem } from './utils/helpers/renderComponents';
 
 // Auto-generated imports
-import { TestComponent } from './components/test-component/TestComponent';
+import { Test } from './components/test/Test';
 
 /**
  * Main entry point
@@ -12,7 +12,7 @@ import { TestComponent } from './components/test-component/TestComponent';
 console.log('🚀 Initializing Reactpify');
 
 // Auto-generated component registrations
-registerComponent('TestComponent', TestComponent);
+registerComponent('Test', Test);
 
 initRenderSystem();
 
