@@ -24,13 +24,65 @@
 - **Auto-injection**: Fragments automatically injected during build process
 - **Extensible**: Easy to add custom fragments for your specific needs
 
+## 📋 Prerequisites
+
+**Reactpify installs ON TOP of existing Shopify themes.** Before installing, you need:
+
+### 🏪 **Existing Shopify Theme**
+- A working Shopify theme directory with these folders:
+  ```
+  your-theme/
+  ├── assets/
+  ├── layout/
+  ├── sections/
+  ├── snippets/
+  └── templates/
+  ```
+
+### 🎯 **Compatible Themes**
+- ✅ **Dawn** (Shopify's free theme)
+- ✅ **Horizon** (Latest Shopify theme)
+- ✅ **Any modern Shopify theme** (Online Store 2.0+)
+- ✅ **Custom themes** with standard structure
+
+### 🚀 **How to Get a Shopify Theme**
+
+**Option 1: Download from your Shopify store**
+```bash
+# Install Shopify CLI
+npm install -g @shopify/cli @shopify/theme
+
+# Download your live theme
+shopify theme pull
+
+# Or start with Dawn (free theme)
+shopify theme init my-theme --clone-url="https://github.com/Shopify/dawn"
+```
+
+**Option 2: Use an existing theme directory**
+If you already have a Shopify theme folder, navigate to it:
+```bash
+cd your-existing-theme/
+# Now you can install Reactpify
+```
+
 ## 🚀 Quick Start
 
 ### Installation
 
+**⚠️ Important: Run this command INSIDE your Shopify theme directory**
+
 ```bash
+cd your-theme-folder/
 npm install reactpifyjs
 ```
+
+Reactpify will automatically:
+- ✅ Detect your Shopify theme
+- ✅ Install all necessary files
+- ✅ Update `layout/theme.liquid`
+- ✅ Create example components
+- ✅ Set up the build system
 
 ### Basic Usage
 
