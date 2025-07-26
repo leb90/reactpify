@@ -1,19 +1,23 @@
+# Files that should NOT be included in the NPM package
+
+# Development files
 node_modules/
 .git/
 .vscode/
 .idea/
+.DS_Store
 
-src/
-!src/main.tsx
-!src/styles.tsx
-!src/styles/
-!src/utils/
-!src/redux/
-
+# Logs and temporary files
 *.log
 *.lock
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files
 .env*
 
+# Test files
 docs/
 tests/
 test/
@@ -21,13 +25,22 @@ test/
 *.test.ts
 *.spec.js
 *.spec.ts
+coverage/
+.nyc_output/
 
-scripts/
-!scripts/shopify-env.js
+# Build outputs (we don't want compiled assets in NPM)
+assets/*.js
+assets/*.css
+assets/*.map
+!assets/*.svg
+!assets/*.png
+!assets/*.jpg
+!assets/*.jpeg
+!assets/*.gif
+!assets/*.webp
 
+# Shopify theme specific files (users have their own)
 sections/
-!sections/*.liquid
-
 snippets/
 layout/
 templates/
@@ -35,22 +48,27 @@ locales/
 config/
 blocks/
 
+# Shopify CLI files
 .shopify/
 .shopifyignore
 
+# Git files
+.gitignore
+
+# Documentation (except README)
 *.md
 !README.md
+!LICENSE
 
-coverage/
-.nyc_output/
-
+# Build directories
 dist/
 build/
 
-tsconfig.json
-tsconfig.node.json
-vite.config.ts
-tailwind.config.js
-
-.gitignore
-.npmignore 
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db 

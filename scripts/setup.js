@@ -2,7 +2,7 @@
 
 /**
  * Reactpify Setup Script
- * Interactive setup for new Reactpify projects
+ * Automatic installation on existing Shopify themes
  */
 
 import fs from 'fs';
@@ -26,53 +26,141 @@ function checkFileExists(filePath) {
   return fs.existsSync(filePath);
 }
 
+function isShopifyTheme() {
+  return checkFileExists('layout') && 
+         checkFileExists('sections') && 
+         checkFileExists('assets') &&
+         (checkFileExists('layout/theme.liquid') || checkFileExists('layout/password.liquid'));
+}
+
 function updateThemeLayout() {
   const layoutPath = 'layout/theme.liquid';
   
   if (!checkFileExists(layoutPath)) {
-    log('⚠️  Warning: layout/theme.liquid not found. You may need to create it manually.', 'yellow');
-    return;
+    log('⚠️  Warning: layout/theme.liquid not found. Skipping theme update.', 'yellow');
+    log('   Please manually add the Reactpify scripts to your theme layout.', 'yellow');
+    return false;
   }
 
-  const content = fs.readFileSync(layoutPath, 'utf8');
-  const reactifyScript = `<script type="module" src="{{ 'reactpify.js' | asset_url }}"></script>`;
+  let content = fs.readFileSync(layoutPath, 'utf8');
   
-  if (content.includes('reactpify.js')) {
-    log('✅ Reactpify script already included in theme.liquid', 'green');
+  // Check if already installed
+  if (content.includes('main.js') && content.includes('main.css')) {
+    log('✅ Reactpify scripts already included in theme.liquid', 'green');
+    return true;
+  }
+
+  // Add CSS before closing </head>
+  if (!content.includes('main.css')) {
+    content = content.replace(
+      /<\/head>/i,
+      `  {{ 'main.css' | asset_url | stylesheet_tag }}\n</head>`
+    );
+  }
+
+  // Add JS before closing </body>
+  if (!content.includes('main.js')) {
+    content = content.replace(
+      /<\/body>/i,
+      `  {{ 'main.js' | asset_url | script_tag }}\n</body>`
+    );
+  }
+
+  fs.writeFileSync(layoutPath, content);
+  log('✅ Added Reactpify scripts to layout/theme.liquid', 'green');
+  return true;
+}
+
+function createDirectories() {
+  const dirs = [
+    'src',
+    'src/components', 
+    'src/styles',
+    'src/utils',
+    'src/utils/helpers',
+    'src/utils/components',
+    'src/utils/components/atoms',
+    'src/utils/components/molecules',
+    'vite-plugins'
+  ];
+
+  dirs.forEach(dir => {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+      log(`📁 Created directory: ${dir}`, 'blue');
+    }
+  });
+}
+
+function copyConfigFiles() {
+  const configFiles = [
+    'vite.config.ts',
+    'tailwind.config.js', 
+    'tsconfig.json',
+    'tsconfig.node.json',
+    'vite-fragment-injection.ts'
+  ];
+
+  let copied = 0;
+  configFiles.forEach(file => {
+    const sourcePath = path.join(process.cwd(), 'node_modules', 'reactpifyjs', file);
+    const destPath = file;
+    
+    if (fs.existsSync(sourcePath) && !fs.existsSync(destPath)) {
+      try {
+        fs.copyFileSync(sourcePath, destPath);
+        log(`📄 Copied ${file}`, 'blue');
+        copied++;
+      } catch (error) {
+        log(`⚠️  Failed to copy ${file}`, 'yellow');
+      }
+    }
+  });
+  
+  if (copied > 0) {
+    log(`✅ Copied ${copied} configuration files`, 'green');
+  }
+}
+
+function copyVitePlugins() {
+  const pluginsDir = 'vite-plugins';
+  const sourceDir = path.join(process.cwd(), 'node_modules', 'reactpifyjs', 'vite-plugins');
+  
+  if (!fs.existsSync(sourceDir)) {
+    log('⚠️  Vite plugins not found in node_modules', 'yellow');
     return;
   }
 
-  // Add before closing </body> tag
-  const updatedContent = content.replace(
-    /<\/body>/i,
-    `  ${reactifyScript}\n</body>`
-  );
-
-  fs.writeFileSync(layoutPath, updatedContent);
-  log('✅ Added Reactpify script to layout/theme.liquid', 'green');
-}
-
-function setupEnvFile() {
-  if (checkFileExists('.env')) {
-    log('✅ .env file already exists', 'green');
-    return;
+  if (!fs.existsSync(pluginsDir)) {
+    fs.mkdirSync(pluginsDir, { recursive: true });
   }
 
-  if (checkFileExists('.env.example')) {
-    fs.copyFileSync('.env.example', '.env');
-    log('✅ Created .env file from .env.example', 'green');
-    log('⚠️  Please edit .env with your Shopify store details', 'yellow');
-  } else {
-    log('⚠️  .env.example not found. You may need to create .env manually.', 'yellow');
+  try {
+    const files = fs.readdirSync(sourceDir);
+    files.forEach(file => {
+      if (file.endsWith('.ts')) {
+        const sourcePath = path.join(sourceDir, file);
+        const destPath = path.join(pluginsDir, file);
+        
+        if (!fs.existsSync(destPath)) {
+          fs.copyFileSync(sourcePath, destPath);
+          log(`🔌 Copied plugin: ${file}`, 'blue');
+        }
+      }
+    });
+    log('✅ Vite plugins installed', 'green');
+  } catch (error) {
+    log('⚠️  Error copying Vite plugins', 'yellow');
   }
 }
 
-function createExampleComponent() {
-  const componentDir = 'src/components/welcome-banner';
-  const componentPath = path.join(componentDir, 'WelcomeBanner.tsx');
+function createTestComponent() {
+  const componentDir = 'src/components/test';
+  const componentPath = path.join(componentDir, 'Test.tsx');
+  const liquidPath = path.join(componentDir, 'section.test.liquid');
 
   if (checkFileExists(componentPath)) {
-    log('✅ Example component already exists', 'green');
+    log('✅ Test component already exists', 'green');
     return;
   }
 
@@ -80,82 +168,196 @@ function createExampleComponent() {
     fs.mkdirSync(componentDir, { recursive: true });
   }
 
-  const componentCode = `import React from 'react';
+  // Create React component
+  const componentCode = `import React, { useState } from 'react';
 
-interface WelcomeBannerProps {
+interface TestProps {
   title?: string;
-  subtitle?: string;
-  backgroundColor?: string;
+  showButton?: boolean;
 }
 
-/**
- * Welcome Banner - Your first Reactpify component!
- * This component will auto-generate its Liquid template
- */
-export const WelcomeBanner: React.FC<WelcomeBannerProps> = ({
-  title = 'Welcome to Reactpify! 🚀',
-  subtitle = 'Your React components are now working in Shopify!',
-  backgroundColor = 'blue'
+export const Test: React.FC<TestProps> = ({
+  title = "Hello World",
+  showButton = true
 }) => {
+  const [clicked, setClicked] = useState(false);
+
   return (
-    <div className={\`welcome-banner bg-\${backgroundColor}-600 text-white p-8 text-center\`}>
-      <h2 className="text-3xl font-bold mb-4">{title}</h2>
-      <p className="text-xl opacity-90">{subtitle}</p>
-      <div className="mt-6">
-        <button 
-          className="bg-white text-blue-600 px-6 py-2 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
-          onClick={() => alert('React is working! 🎉')}
-        >
-          Test React Interaction
-        </button>
+    <div className="reactpify-container max-w-md mx-auto p-6">
+      <div className="bg-blue-500 text-white p-6 rounded-lg shadow-lg text-center">
+        <h1 className="text-2xl font-bold mb-4">{title}</h1>
+        
+        {showButton && (
+          <button 
+            onClick={() => setClicked(!clicked)}
+            className="bg-white text-blue-500 px-4 py-2 rounded hover:bg-gray-100 transition-colors font-semibold"
+          >
+            {clicked ? '✅ Clicked!' : '👋 Click me'}
+          </button>
+        )}
       </div>
     </div>
   );
 };`;
 
+  // Create Liquid template
+  const liquidCode = `{% comment %}
+Auto-generated by Reactpify
+Component: Test
+{% endcomment %}
+
+<div data-component-root data-section-data='{{ section | json | escape }}'>
+  <div data-fallback>
+    <div class="max-w-md mx-auto p-6">
+      <div class="bg-blue-500 text-white p-6 rounded-lg shadow-lg text-center">
+        <h1 class="text-2xl font-bold mb-4">{{ section.settings.title | default: 'Hello World' }}</h1>
+        
+        {% if section.settings.show_button %}
+          <button class="bg-white text-blue-500 px-4 py-2 rounded hover:bg-gray-100 transition-colors font-semibold">
+            👋 Click me
+          </button>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{{ 'main.css' | asset_url | stylesheet_tag }}
+{{ 'main.js' | asset_url | script_tag }}
+
+{% schema %}
+{
+  "name": "Test",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Title",
+      "default": "Hello World"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_button",
+      "label": "Show Button",
+      "default": true
+    }
+  ],
+  "presets": [
+    {
+      "name": "Test"
+    }
+  ]
+}
+{% endschema %}`;
+
   fs.writeFileSync(componentPath, componentCode);
-  log('✅ Created example WelcomeBanner component', 'green');
+  fs.writeFileSync(liquidPath, liquidCode);
+  log('✅ Created Test component with Liquid template', 'green');
+}
+
+function createMainEntry() {
+  const mainPath = 'src/main.tsx';
+  
+  if (checkFileExists(mainPath)) {
+    log('✅ Main entry already exists', 'green');
+    return;
+  }
+
+  const mainCode = `import { registerComponent, initRenderSystem } from './utils/helpers/renderComponents';
+
+import { Test } from './components/test/Test';
+
+registerComponent('Test', Test);
+
+initRenderSystem();
+
+console.log('🚀 Initializing Reactpify');
+console.log('✅ Reactpify initialized successfully');`;
+
+  fs.writeFileSync(mainPath, mainCode);
+  log('✅ Created main entry point', 'green');
+}
+
+function updatePackageJson() {
+  const packagePath = 'package.json';
+  
+  if (!checkFileExists(packagePath)) {
+    log('⚠️  package.json not found in theme', 'yellow');
+    return;
+  }
+
+  try {
+    const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+    
+    // Add Reactpify scripts if they don't exist
+    if (!pkg.scripts) pkg.scripts = {};
+    
+    if (!pkg.scripts.watch) {
+      pkg.scripts.watch = 'vite build --watch --mode development';
+    }
+    if (!pkg.scripts.build) {
+      pkg.scripts.build = 'vite build';
+    }
+    
+    fs.writeFileSync(packagePath, JSON.stringify(pkg, null, 2));
+    log('✅ Updated package.json with Reactpify scripts', 'green');
+  } catch (error) {
+    log('⚠️  Could not update package.json', 'yellow');
+  }
 }
 
 function runSetup() {
-  log('🚀 Setting up Reactpify...\n', 'bold');
+  log('🚀 Installing Reactpify on your Shopify theme...\n', 'bold');
 
   // Check if we're in a Shopify theme
-  if (!checkFileExists('layout') || !checkFileExists('sections')) {
+  if (!isShopifyTheme()) {
     log('❌ This doesn\'t appear to be a Shopify theme directory.', 'red');
-    log('   Make sure you\'re in a directory with layout/ and sections/ folders.', 'yellow');
+    log('   Make sure you\'re in a directory with layout/, sections/, and assets/ folders.', 'yellow');
     process.exit(1);
   }
 
-  // Setup .env file
-  log('📄 Setting up environment configuration...', 'blue');
-  setupEnvFile();
+  log('✅ Shopify theme detected', 'green');
+
+  // Create directory structure
+  log('📁 Creating directory structure...', 'blue');
+  createDirectories();
+
+  // Copy configuration files
+  log('📄 Installing configuration files...', 'blue');
+  copyConfigFiles();
+
+  // Copy Vite plugins
+  log('🔌 Installing Vite plugins...', 'blue');
+  copyVitePlugins();
 
   // Update theme.liquid
   log('📝 Updating layout/theme.liquid...', 'blue');
-  updateThemeLayout();
+  const themeUpdated = updateThemeLayout();
 
-  // Create example component
-  log('🎨 Creating example component...', 'blue');
-  createExampleComponent();
+  // Create test component
+  log('🎨 Creating test component...', 'blue');
+  createTestComponent();
 
-  // Build the project
-  log('🔨 Building Reactpify...', 'blue');
-  try {
-    execSync('npm run build', { stdio: 'inherit' });
-    log('✅ Build completed successfully', 'green');
-  } catch (error) {
-    log('❌ Build failed. Please run "npm run build" manually.', 'red');
-  }
+  // Create main entry
+  log('⚙️  Creating main entry point...', 'blue');
+  createMainEntry();
+
+  // Update package.json
+  log('📦 Updating package.json...', 'blue');
+  updatePackageJson();
 
   // Success message
-  log('\n🎉 Reactpify setup completed!', 'green');
+  log('\n🎉 Reactpify installed successfully!', 'green');
   log('\n📋 Next steps:', 'bold');
-  log('1. Run "npm run watch" in one terminal', 'blue');
-  log('2. Run "npm run dev" in another terminal', 'blue');
-  log('3. Add the "Welcome Banner" section in your Shopify theme editor', 'blue');
-  log('4. Start creating your own React components!', 'blue');
-  log('\n📖 Read GETTING_STARTED.md for detailed instructions.', 'yellow');
+  log('1. Run "npm run build" to compile your components', 'blue');
+  log('2. Run "npm run watch" for development mode', 'blue');
+  if (themeUpdated) {
+    log('3. Add the "Test" section in your Shopify theme editor', 'blue');
+  } else {
+    log('3. Manually add Reactpify scripts to your theme layout', 'blue');
+  }
+  log('4. Start building amazing React components!', 'blue');
+  log('\n📖 Visit https://github.com/leb90/reactpify for documentation', 'yellow');
 }
 
 runSetup(); 

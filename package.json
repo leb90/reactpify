@@ -20,7 +20,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/leb90/reactpify.git"
+    "url": "git+https://github.com/leb90/reactpify.git"
   },
   "homepage": "https://github.com/leb90/reactpify#readme",
   "bugs": {
@@ -28,7 +28,7 @@
   },
   "main": "vite.config.ts",
   "bin": {
-    "reactpify": "./scripts/setup.js"
+    "reactpify": "scripts/setup.js"
   },
   "files": [
     "vite-plugins/",
@@ -37,9 +37,10 @@
     "README.md",
     "LICENSE",
     "tailwind.config.js",
-    "postcss.config.js",
     "tsconfig.json",
-    "vite.config.ts"
+    "tsconfig.node.json",
+    "vite.config.ts",
+    "vite-fragment-injection.ts"
   ],
   "engines": {
     "node": ">=18.0.0",
@@ -47,33 +48,21 @@
   },
   "type": "module",
   "scripts": {
+    "postinstall": "node scripts/setup.js",
     "watch": "vite build --watch --mode development",
     "build": "vite build",
-    "dev": "shopify theme dev --store=test-forleb.myshopify.com",
-    "dev:theme": "shopify theme dev --store=test-forleb.myshopify.com --theme=150788800766",
-    "preview": "vite preview",
-    "lint": "eslint .",
-    "shopify:push": "npm run build && shopify theme push --store=test-forleb.myshopify.com",
-    "shopify:push:dev": "npm run build && shopify theme push --store=test-forleb.myshopify.com --theme=150788800766",
-    "shopify:push:prod": "npm run build && shopify theme push --store=test-forleb.myshopify.com --theme=$SHOPIFY_PROD_THEME_ID",
-    "shopify:pull": "shopify theme pull --store=test-forleb.myshopify.com",
-    "shopify:pull:dev": "shopify theme pull --store=test-forleb.myshopify.com --theme=150788800766",
     "setup": "node scripts/setup.js",
-    "env:dev": "node scripts/shopify-env.js dev",
-    "env:dev:theme": "node scripts/shopify-env.js dev:theme",
-    "env:push": "npm run build && node scripts/shopify-env.js push",
-    "env:push:dev": "npm run build && node scripts/shopify-env.js push:dev",
-    "env:push:prod": "npm run build && node scripts/shopify-env.js push:prod",
-    "env:pull": "node scripts/shopify-env.js pull",
-    "env:pull:dev": "node scripts/shopify-env.js pull:dev",
-    "clean": "cross-env rm -rf assets/reactpify.js sections/product-* sections/newsletter-* sections/countdown-* sections/cart-*"
+    "clean": "cross-env rm -rf assets/reactpify.js sections/product-* sections/newsletter-* sections/countdown-* sections/cart-*",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "peerDependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.8.2",
-    "@types/node": "^24.0.15",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "react-redux": "^9.2.0"
+    "@types/node": "^24.0.15"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",
@@ -93,6 +82,9 @@
     "globals": "^16.3.0",
     "postcss": "^8.5.6",
     "postcss-cli": "^11.0.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-redux": "^9.2.0",
     "tailwindcss": "^4.1.11",
     "tsx": "^4.20.3",
     "typescript": "~5.8.3",
