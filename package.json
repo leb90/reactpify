@@ -1,6 +1,6 @@
 {
   "name": "reactpifyjs",
-  "version": "1.0.17",
+  "version": "1.0.18",
   "description": "🚀 The easiest way to add React components to any Shopify theme with Vite, Tailwind CSS, and intelligent Liquid auto-generation",
   "keywords": [
     "shopify",

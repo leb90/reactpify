@@ -253,7 +253,11 @@ ${themeStyles}
             styleMatches.forEach(styleBlock => {
               const cssContent = styleBlock.replace(/<\/?style[^>]*>/gi, '').trim();
               if (cssContent) {
-                embeddedCss += `\n/* === Extracted from ${file} === */\n${cssContent}\n`;
+                // Apply same validation as regular CSS files
+                const validatedCss = validateAndCleanCSS(cssContent, file);
+                if (validatedCss.trim()) {
+                  embeddedCss += `\n/* === Extracted from ${file} === */\n${validatedCss}\n`;
+                }
               }
             });
           }
