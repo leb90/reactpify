@@ -160,7 +160,11 @@ function copyConfigFiles() {
     'tailwind.config.js', 
     'tsconfig.json',
     'tsconfig.node.json',
-    'vite-fragment-injection.ts'
+    'vite-fragment-injection.ts',
+    '.gitignore',
+    'env.example',
+    'start-dev.ps1',
+    'start-dev.sh'
   ];
 
   const scriptFiles = [
@@ -173,12 +177,14 @@ function copyConfigFiles() {
   // Copy config files to root
   configFiles.forEach(file => {
     const sourcePath = path.join(process.cwd(), 'node_modules', 'reactpifyjs', file);
-    const destPath = file;
+    
+    // Special case: rename env.example to .env.example
+    const destPath = file === 'env.example' ? '.env.example' : file;
     
     if (fs.existsSync(sourcePath) && !fs.existsSync(destPath)) {
       try {
         fs.copyFileSync(sourcePath, destPath);
-        log(`📄 Copied ${file}`, 'blue');
+        log(`📄 Copied ${file}${file === 'env.example' ? ' → .env.example' : ''}`, 'blue');
         copied++;
       } catch (error) {
         log(`⚠️  Failed to copy ${file}`, 'yellow');

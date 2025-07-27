@@ -1,6 +1,6 @@
 {
   "name": "reactpifyjs",
-  "version": "1.0.22",
+  "version": "1.0.23",
   "description": "🚀 The easiest way to add React components to any Shopify theme with Vite, Tailwind CSS, and intelligent Liquid auto-generation",
   "keywords": [
     "shopify",
@@ -37,7 +37,11 @@
     "tsconfig.json",
     "tsconfig.node.json",
     "vite.config.ts",
-    "vite-fragment-injection.ts"
+    "vite-fragment-injection.ts",
+    ".gitignore",
+    "env.example",
+    "start-dev.ps1",
+    "start-dev.sh"
   ],
   "scripts": {
     "postinstall": "node scripts/setup.js",
