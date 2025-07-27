@@ -40,13 +40,13 @@ export function themeStyleAnalyzer(options: ThemeStyleAnalyzerOptions = {}): Plu
   }
 
   function filterThemeSelectors(css: string, fileName: string): string {
-    if (css.includes('--reactpify-primary') || css.includes('REACTPIFY - Theme Styles')) {
-      console.log(`🚫 [THEME-ANALYZER] Ignoring Reactpify generated file: ${fileName}`);
+    if (!css || css.trim().length === 0) {
       return '';
     }
 
     css = css.replace(/\/\*[\s\S]*?\*\//g, '');
     
+    // First pass: Extract valid CSS rules
     const preservePatterns = [
       /:root\s*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g,
       /@font-face\s*\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}/g,
@@ -74,6 +74,7 @@ export function themeStyleAnalyzer(options: ThemeStyleAnalyzerOptions = {}): Plu
       });
     });
 
+    // Second pass: Remove problematic patterns and invalid CSS
     const excludePatterns = [
       /\*\s*,\s*\*::before\s*,\s*\*::after/,
       /\*\s*\{[^}]*box-sizing[^}]*\}/g,
@@ -85,7 +86,63 @@ export function themeStyleAnalyzer(options: ThemeStyleAnalyzerOptions = {}): Plu
       filteredCss = filteredCss.replace(pattern, '');
     });
 
+    // Third pass: Validate and clean individual CSS lines
+    filteredCss = validateAndCleanCSS(filteredCss, fileName);
+
     return scopeThemeStyles(filteredCss.trim());
+  }
+
+  function validateAndCleanCSS(css: string, fileName: string): string {
+    const lines = css.split('\n');
+    const validLines: string[] = [];
+    let insideRule = false;
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      
+      // Skip empty lines
+      if (!line) {
+        validLines.push(line);
+        continue;
+      }
+      
+      // Track if we're inside a CSS rule
+      if (line.includes('{')) insideRule = true;
+      if (line.includes('}')) insideRule = false;
+      
+      // Skip invalid CSS patterns
+      if (isInvalidCSS(line)) {
+        console.warn(`⚠️ [THEME-ANALYZER] Invalid CSS skipped in ${fileName}:`, line);
+        continue;
+      }
+      
+      validLines.push(line);
+    }
+    
+    return validLines.join('\n');
+  }
+
+  function isInvalidCSS(line: string): boolean {
+    const trimmed = line.trim();
+    
+    // Skip lines that are clearly invalid
+    const invalidPatterns = [
+      /^section\.id\s*$/,                    // Invalid: section.id
+      /^[a-z]+\.[a-z]+\s*$/,                // Invalid: word.word without proper CSS syntax
+      /^[^{}\s]+\.[^{}\s:]+\s*$/,          // Invalid: selector.invalid without braces or properties
+      /^\w+\.\w+\s*$/,                      // Invalid: simple word.word
+      /^[^{:;]+\.[^{:;]+\s*$/,             // Invalid: anything.anything without CSS syntax
+      /\$\{[^}]*\}/,                        // Template literals
+      /\{\{[^}]*\}\}/,                      // Handlebars/Liquid syntax
+      /\{%[^%]*%\}/,                        // Liquid tags
+      /javascript:/i,                       // JavaScript URLs
+      /^function\s*\(/,                     // JavaScript functions
+      /^var\s+/,                            // JavaScript variables
+      /^let\s+/,                            // JavaScript variables
+      /^const\s+/,                          // JavaScript variables
+    ];
+    
+    return invalidPatterns.some(pattern => pattern.test(trimmed));
   }
 
   function scopeThemeStyles(css: string): string {
