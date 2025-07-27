@@ -9,6 +9,31 @@ import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 
+// Detectar si estamos ejecutando desde node_modules y ajustar working directory
+function adjustWorkingDirectory() {
+  const currentDir = process.cwd();
+  
+  // Si estamos en node_modules/reactpifyjs, necesitamos ir al directorio raíz del tema
+  if (currentDir.includes('node_modules/reactpifyjs') || currentDir.includes('node_modules\\reactpifyjs')) {
+    // Buscar hacia arriba hasta encontrar el directorio que contiene node_modules
+    let themeDir = currentDir;
+    while (themeDir && !themeDir.endsWith('node_modules')) {
+      themeDir = path.dirname(themeDir);
+    }
+    
+    if (themeDir.endsWith('node_modules')) {
+      themeDir = path.dirname(themeDir); // Subir un nivel más para salir de node_modules
+      
+      // Cambiar el working directory
+      process.chdir(themeDir);
+      console.log(`📁 Working directory adjusted to: ${process.cwd()}`);
+    }
+  }
+}
+
+// Ajustar working directory antes de hacer cualquier cosa
+adjustWorkingDirectory();
+
 const colors = {
   green: '\x1b[32m',
   blue: '\x1b[34m',
@@ -50,6 +75,21 @@ function isShopifyTheme() {
     console.log(`- sections/ directory: ${hasSections}`);
     console.log(`- assets/ directory: ${hasAssets}`);
     console.log(`- theme.liquid file: ${hasThemeFile}`);
+    
+    // Mostrar contenido del directorio actual
+    try {
+      const files = fs.readdirSync(process.cwd());
+      console.log(`\n📂 Contents of current directory:`);
+      files.slice(0, 10).forEach(file => { // Mostrar solo los primeros 10
+        const stat = fs.statSync(file);
+        console.log(`  ${stat.isDirectory() ? '📁' : '📄'} ${file}`);
+      });
+      if (files.length > 10) {
+        console.log(`  ... and ${files.length - 10} more items`);
+      }
+    } catch (error) {
+      console.log(`⚠️  Could not read directory contents`);
+    }
   }
   
   return hasLayout && hasSections && hasAssets && hasThemeFile;

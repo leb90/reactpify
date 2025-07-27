@@ -1,34 +1,31 @@
 {
   "name": "reactpifyjs",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "🚀 The easiest way to add React components to any Shopify theme with Vite, Tailwind CSS, and intelligent Liquid auto-generation",
   "keywords": [
     "shopify",
     "react",
-    "liquid",
-    "ecommerce",
-    "theme",
-    "components",
     "vite",
     "tailwind",
-    "shopify-theme",
-    "react-shopify",
-    "auto-generation",
-    "metaobjects"
+    "theme",
+    "ecommerce",
+    "components",
+    "liquid",
+    "typescript"
   ],
-  "author": "leb90 <leb90@example.com>",
-  "license": "MIT",
+  "homepage": "https://github.com/leb90/reactpify",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/leb90/reactpify.git"
+    "url": "https://github.com/leb90/reactpify.git"
   },
-  "homepage": "https://github.com/leb90/reactpify#readme",
   "bugs": {
     "url": "https://github.com/leb90/reactpify/issues"
   },
+  "author": "leb90",
+  "license": "MIT",
   "main": "vite.config.ts",
   "bin": {
-    "reactpify": "scripts/setup.js"
+    "reactpify": "./scripts/setup.js"
   },
   "files": [
     "vite-plugins/",
@@ -42,54 +39,36 @@
     "vite.config.ts",
     "vite-fragment-injection.ts"
   ],
-  "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=8.0.0"
-  },
-  "type": "module",
   "scripts": {
     "postinstall": "node scripts/setup.js",
-    "watch": "vite build --watch --mode development",
+    "dev": "vite serve --mode development",
     "build": "vite build",
-    "setup": "node scripts/setup.js",
-    "clean": "cross-env rm -rf assets/reactpify.js sections/product-* sections/newsletter-* sections/countdown-* sections/cart-*",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "watch": "vite build --watch --mode development",
+    "preview": "vite preview",
+    "clean": "rm -rf assets/main.* sections/auto-*.liquid",
+    "type-check": "tsc --noEmit"
   },
   "peerDependencies": {
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },
-  "dependencies": {
-    "@reduxjs/toolkit": "^2.8.2",
-    "@types/node": "^24.0.15"
-  },
   "devDependencies": {
-    "@eslint/js": "^9.30.1",
-    "@tailwindcss/vite": "^4.1.11",
-    "@types/react": "^19.1.8",
-    "@types/react-dom": "^19.1.6",
-    "@vitejs/plugin-react": "^4.6.0",
-    "autoprefixer": "^10.4.21",
-    "chokidar": "^4.0.3",
-    "cross-env": "^7.0.3",
-    "cross-env-shell": "^7.0.3",
-    "dotenv-cli": "^8.0.0",
-    "eslint": "^9.30.1",
-    "eslint-plugin-react-hooks": "^5.2.0",
-    "eslint-plugin-react-refresh": "^0.4.20",
-    "glob": "^11.0.3",
-    "globals": "^16.3.0",
-    "postcss": "^8.5.6",
-    "postcss-cli": "^11.0.1",
+    "@reduxjs/toolkit": "^2.4.0",
+    "@tailwindcss/vite": "^4.0.13",
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "@vitejs/plugin-react": "^4.3.4",
+    "chokidar": "^4.0.1",
+    "glob": "^11.0.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-redux": "^9.2.0",
-    "tailwindcss": "^4.1.11",
-    "tsx": "^4.20.3",
-    "typescript": "~5.8.3",
-    "typescript-eslint": "^8.35.1",
-    "vite": "^7.0.4",
-    "vite-plugin-static-copy": "^3.1.1"
-  }
+    "rollup": "^4.30.1",
+    "tailwindcss": "^4.0.13",
+    "typescript": "~5.7.3",
+    "vite": "^6.0.7",
+    "vite-plugin-static-copy": "^2.1.0"
+  },
+  "type": "module"
 }
