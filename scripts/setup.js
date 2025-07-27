@@ -213,6 +213,85 @@ function copyConfigFiles() {
   }
 }
 
+function copySrcFiles() {
+  const srcFiles = [
+    'src/main.tsx',
+    'src/styles.tsx',
+    'src/reactpify-styles.css'
+  ];
+
+  let copied = 0;
+  
+  // Copy individual src files
+  srcFiles.forEach(file => {
+    const sourcePath = path.join(process.cwd(), 'node_modules', 'reactpifyjs', file);
+    const destPath = file;
+    
+    // Ensure src directory exists
+    const destDir = path.dirname(destPath);
+    if (!fs.existsSync(destDir)) {
+      fs.mkdirSync(destDir, { recursive: true });
+    }
+    
+    if (fs.existsSync(sourcePath) && !fs.existsSync(destPath)) {
+      try {
+        fs.copyFileSync(sourcePath, destPath);
+        log(`📄 Copied ${file}`, 'blue');
+        copied++;
+      } catch (error) {
+        log(`⚠️  Failed to copy ${file}`, 'yellow');
+      }
+    }
+  });
+
+  // Copy src subdirectories
+  const srcDirs = [
+    'src/styles',
+    'src/utils',
+    'src/components'
+  ];
+
+  srcDirs.forEach(srcDir => {
+    const sourcePath = path.join(process.cwd(), 'node_modules', 'reactpifyjs', srcDir);
+    const destPath = srcDir;
+    
+    if (fs.existsSync(sourcePath)) {
+      try {
+        // Recursively copy directory
+        const copyDir = (src, dest) => {
+          if (!fs.existsSync(dest)) {
+            fs.mkdirSync(dest, { recursive: true });
+          }
+          
+          const items = fs.readdirSync(src);
+          items.forEach(item => {
+            const srcItem = path.join(src, item);
+            const destItem = path.join(dest, item);
+            
+            if (fs.statSync(srcItem).isDirectory()) {
+              copyDir(srcItem, destItem);
+            } else {
+              if (!fs.existsSync(destItem)) {
+                fs.copyFileSync(srcItem, destItem);
+                copied++;
+              }
+            }
+          });
+        };
+        
+        copyDir(sourcePath, destPath);
+        log(`📁 Copied ${srcDir}/`, 'blue');
+      } catch (error) {
+        log(`⚠️  Failed to copy ${srcDir}`, 'yellow');
+      }
+    }
+  });
+  
+  if (copied > 0) {
+    log(`✅ Copied ${copied} source files`, 'green');
+  }
+}
+
 function copyVitePlugins() {
   const pluginsDir = 'vite-plugins';
   const sourceDir = path.join(process.cwd(), 'node_modules', 'reactpifyjs', 'vite-plugins');
@@ -567,6 +646,10 @@ async function runSetup() {
   // Copy configuration files
   log('📄 Installing configuration files...', 'blue');
   copyConfigFiles();
+
+  // Copy source files
+  log('📄 Installing source files...', 'blue');
+  copySrcFiles();
 
   // Copy Vite plugins
   log('🔌 Installing Vite plugins...', 'blue');
