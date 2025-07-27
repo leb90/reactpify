@@ -163,10 +163,39 @@ function copyConfigFiles() {
     'vite-fragment-injection.ts'
   ];
 
+  const scriptFiles = [
+    'scripts/smart-build.js',
+    'scripts/smart-watch.js'
+  ];
+
   let copied = 0;
+  
+  // Copy config files to root
   configFiles.forEach(file => {
     const sourcePath = path.join(process.cwd(), 'node_modules', 'reactpifyjs', file);
     const destPath = file;
+    
+    if (fs.existsSync(sourcePath) && !fs.existsSync(destPath)) {
+      try {
+        fs.copyFileSync(sourcePath, destPath);
+        log(`📄 Copied ${file}`, 'blue');
+        copied++;
+      } catch (error) {
+        log(`⚠️  Failed to copy ${file}`, 'yellow');
+      }
+    }
+  });
+
+  // Copy script files to scripts directory
+  scriptFiles.forEach(file => {
+    const sourcePath = path.join(process.cwd(), 'node_modules', 'reactpifyjs', file);
+    const destPath = file;
+    
+    // Ensure scripts directory exists
+    const destDir = path.dirname(destPath);
+    if (!fs.existsSync(destDir)) {
+      fs.mkdirSync(destDir, { recursive: true });
+    }
     
     if (fs.existsSync(sourcePath) && !fs.existsSync(destPath)) {
       try {
@@ -430,91 +459,10 @@ function createOrUpdatePackageJson() {
   if (!pkg.private) pkg.private = true;
   if (!pkg.type) pkg.type = 'module';
 
-  // Create smart build script that auto-installs dependencies
-  const smartBuildScript = `node -e "
-    const { existsSync } = require('fs');
-    const { execSync } = require('child_process');
-    const path = require('path');
-    
-    console.log('🔍 Checking dependencies...');
-    
-    // Verificar si las dependencias críticas están instaladas
-    const criticalDeps = ['vite', 'react', 'react-dom', '@vitejs/plugin-react'];
-    const missingDeps = criticalDeps.filter(dep => !existsSync(path.join('node_modules', dep)));
-    
-    if (missingDeps.length > 0) {
-      console.log('📦 Installing missing dependencies:', missingDeps.join(', '));
-      console.log('⏳ This may take a few minutes...');
-      
-      try {
-        execSync('npm install', { stdio: 'inherit', timeout: 300000 }); // 5 min timeout
-        console.log('✅ Dependencies installed successfully');
-        
-        // Verificar nuevamente después de la instalación
-        const stillMissing = criticalDeps.filter(dep => !existsSync(path.join('node_modules', dep)));
-        if (stillMissing.length > 0) {
-          console.error('❌ Failed to install:', stillMissing.join(', '));
-          console.log('💡 Try running: npm install');
-          process.exit(1);
-        }
-      } catch (error) {
-        console.error('❌ Failed to install dependencies');
-        console.log('💡 Please run: npm install');
-        process.exit(1);
-      }
-    } else {
-      console.log('✅ All dependencies are already installed');
-    }
-    
-    console.log('🚀 Building with Vite...');
-    try {
-      execSync('npx vite build', { stdio: 'inherit' });
-      console.log('✅ Build completed successfully');
-    } catch (error) {
-      console.error('❌ Build failed');
-      console.log('💡 Try running: npx vite build');
-      process.exit(1);
-    }
-  "`;
-
-  const smartWatchScript = `node -e "
-    const { existsSync } = require('fs');
-    const { execSync } = require('child_process');
-    const path = require('path');
-    
-    console.log('🔍 Checking dependencies...');
-    
-    const criticalDeps = ['vite', 'react', 'react-dom', '@vitejs/plugin-react'];
-    const missingDeps = criticalDeps.filter(dep => !existsSync(path.join('node_modules', dep)));
-    
-    if (missingDeps.length > 0) {
-      console.log('📦 Installing missing dependencies:', missingDeps.join(', '));
-      try {
-        execSync('npm install', { stdio: 'inherit', timeout: 300000 });
-        console.log('✅ Dependencies installed successfully');
-      } catch (error) {
-        console.error('❌ Failed to install dependencies');
-        console.log('💡 Please run: npm install');
-        process.exit(1);
-      }
-    } else {
-      console.log('✅ All dependencies are ready');
-    }
-    
-    console.log('👀 Starting watch mode...');
-    try {
-      execSync('npx vite build --watch --mode development', { stdio: 'inherit' });
-    } catch (error) {
-      console.error('❌ Watch mode failed');
-      console.log('💡 Try running: npx vite build --watch --mode development');
-      process.exit(1);
-    }
-  "`;
-
-  // Add/update scripts
+  // Add/update scripts with simple script references
   if (!pkg.scripts) pkg.scripts = {};
-  pkg.scripts.build = smartBuildScript;
-  pkg.scripts.watch = smartWatchScript;
+  pkg.scripts.build = 'node scripts/smart-build.js';
+  pkg.scripts.watch = 'node scripts/smart-watch.js';
   pkg.scripts.dev = 'vite serve --mode development';
   pkg.scripts.preview = 'vite preview';
   pkg.scripts['type-check'] = 'tsc --noEmit';
