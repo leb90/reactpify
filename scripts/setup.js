@@ -430,10 +430,37 @@ function createOrUpdatePackageJson() {
   if (!pkg.private) pkg.private = true;
   if (!pkg.type) pkg.type = 'module';
 
+  // Create smart build script that auto-installs dependencies
+  const smartBuildScript = `node -e "
+    const { existsSync } = require('fs');
+    const { execSync } = require('child_process');
+    
+    if (!existsSync('node_modules/vite') || !existsSync('node_modules/react')) {
+      console.log('📦 Installing dependencies...');
+      execSync('npm install', { stdio: 'inherit' });
+    }
+    
+    console.log('🚀 Building with Vite...');
+    execSync('vite build', { stdio: 'inherit' });
+  "`;
+
+  const smartWatchScript = `node -e "
+    const { existsSync } = require('fs');
+    const { execSync } = require('child_process');
+    
+    if (!existsSync('node_modules/vite') || !existsSync('node_modules/react')) {
+      console.log('📦 Installing dependencies...');
+      execSync('npm install', { stdio: 'inherit' });
+    }
+    
+    console.log('👀 Starting watch mode...');
+    execSync('vite build --watch --mode development', { stdio: 'inherit' });
+  "`;
+
   // Add/update scripts
   if (!pkg.scripts) pkg.scripts = {};
-  pkg.scripts.build = 'vite build';
-  pkg.scripts.watch = 'vite build --watch --mode development';
+  pkg.scripts.build = smartBuildScript;
+  pkg.scripts.watch = smartWatchScript;
   pkg.scripts.dev = 'vite serve --mode development';
   pkg.scripts.preview = 'vite preview';
   pkg.scripts['type-check'] = 'tsc --noEmit';
@@ -476,18 +503,50 @@ function installDependencies() {
   log('⏳ This may take a few minutes...', 'yellow');
   
   try {
-    execSync('npm install', { 
-      stdio: 'inherit',
-      cwd: process.cwd()
+    // Usar spawn en lugar de execSync para mejor compatibilidad con Windows
+    const { spawn } = require('child_process');
+    const isWindows = process.platform === 'win32';
+    const npmCommand = isWindows ? 'npm.cmd' : 'npm';
+    
+    const npmProcess = spawn(npmCommand, ['install'], {
+      stdio: 'pipe', // Cambiar de 'inherit' a 'pipe' para evitar conflictos
+      cwd: process.cwd(),
+      shell: isWindows
     });
-    log('✅ Dependencies installed successfully', 'green');
+
+    return new Promise((resolve, reject) => {
+      let output = '';
+      
+      npmProcess.stdout.on('data', (data) => {
+        output += data.toString();
+      });
+      
+      npmProcess.stderr.on('data', (data) => {
+        output += data.toString();
+      });
+      
+      npmProcess.on('close', (code) => {
+        if (code === 0) {
+          log('✅ Dependencies installed successfully', 'green');
+          resolve(true);
+        } else {
+          log('⚠️  Dependencies will be installed on first build', 'yellow');
+          resolve(false);
+        }
+      });
+      
+      npmProcess.on('error', (error) => {
+        log('⚠️  Dependencies will be installed on first build', 'yellow');
+        resolve(false);
+      });
+    });
   } catch (error) {
-    log('⚠️  Warning: Could not install dependencies automatically', 'yellow');
-    log('   Please run "npm install" manually after setup completes', 'yellow');
+    log('⚠️  Dependencies will be installed on first build', 'yellow');
+    return false;
   }
 }
 
-function runSetup() {
+async function runSetup() {
   log('🚀 Installing Reactpify on your Shopify theme...\n', 'bold');
 
   // Check if we're in a Shopify theme
@@ -511,12 +570,13 @@ function runSetup() {
   log('🔌 Installing Vite plugins...', 'blue');
   copyVitePlugins();
 
-  // Create/update package.json with all dependencies
-  log('📦 Setting up package.json...', 'blue');
+  // Create/update package.json with smart scripts
+  log('📦 Setting up package.json with smart build scripts...', 'blue');
   createOrUpdatePackageJson();
 
-  // Install dependencies automatically
-  installDependencies();
+  // Try to install dependencies, but don't fail if it doesn't work
+  log('📦 Attempting to install dependencies...', 'blue');
+  const depsInstalled = await installDependencies();
 
   // Create utility files
   log('🛠️  Creating utility files...', 'blue');
@@ -537,7 +597,13 @@ function runSetup() {
   // Success message
   log('\n🎉 Reactpify installed successfully!', 'green');
   log('\n📋 Next steps:', 'bold');
-  log('1. Run "npm run build" to compile your components', 'blue');
+  
+  if (depsInstalled) {
+    log('1. Run "npm run build" - dependencies are ready!', 'blue');
+  } else {
+    log('1. Run "npm run build" - it will auto-install dependencies first', 'blue');
+  }
+  
   log('2. Run "npm run watch" for development mode', 'blue');
   if (themeUpdated) {
     log('3. Add the "Test" section in your Shopify theme editor', 'blue');
