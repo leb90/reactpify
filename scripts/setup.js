@@ -23,14 +23,36 @@ function log(message, color = 'reset') {
 }
 
 function checkFileExists(filePath) {
-  return fs.existsSync(filePath);
+  const fullPath = path.resolve(process.cwd(), filePath);
+  return fs.existsSync(fullPath);
+}
+
+function checkDirectoryExists(dirPath) {
+  const fullPath = path.resolve(process.cwd(), dirPath);
+  try {
+    const stat = fs.statSync(fullPath);
+    return stat.isDirectory();
+  } catch (error) {
+    return false;
+  }
 }
 
 function isShopifyTheme() {
-  return checkFileExists('layout') && 
-         checkFileExists('sections') && 
-         checkFileExists('assets') &&
-         (checkFileExists('layout/theme.liquid') || checkFileExists('layout/password.liquid'));
+  const hasLayout = checkDirectoryExists('layout');
+  const hasSections = checkDirectoryExists('sections'); 
+  const hasAssets = checkDirectoryExists('assets');
+  const hasThemeFile = checkFileExists('layout/theme.liquid') || checkFileExists('layout/password.liquid');
+  
+  // Debug output only if check fails
+  if (!hasLayout || !hasSections || !hasAssets || !hasThemeFile) {
+    console.log(`\n🔍 Debug: Current directory: ${process.cwd()}`);
+    console.log(`- layout/ directory: ${hasLayout}`);
+    console.log(`- sections/ directory: ${hasSections}`);
+    console.log(`- assets/ directory: ${hasAssets}`);
+    console.log(`- theme.liquid file: ${hasThemeFile}`);
+  }
+  
+  return hasLayout && hasSections && hasAssets && hasThemeFile;
 }
 
 function updateThemeLayout() {
