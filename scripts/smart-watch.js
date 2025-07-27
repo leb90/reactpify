@@ -29,23 +29,21 @@ function isDependencyInstalled(dep) {
 }
 
 const criticalDeps = [
-  // Dependencias básicas
-  'vite', 
-  'react', 
-  'react-dom', 
-  '@vitejs/plugin-react',
-  // Dependencias de Tailwind (usadas en vite.config.ts)
-  '@tailwindcss/vite',
+  'vite',
+  '@vitejs/plugin-react', 
   'tailwindcss',
-  // Dependencias de TypeScript
+  '@tailwindcss/vite',
   'typescript',
-  '@types/react',
-  '@types/react-dom', 
-  '@types/node',
-  // Dependencias de plugins de Vite
   'vite-plugin-static-copy',
-  'chokidar',
-  'glob'
+  '@types/react',
+  '@types/react-dom',
+  'react',
+  'react-dom',
+  'react-redux',
+  '@reduxjs/toolkit',
+  'vite-tsconfig-paths',
+  'glob',
+  'esbuild'
 ];
 const missingDeps = criticalDeps.filter(dep => !isDependencyInstalled(dep));
 

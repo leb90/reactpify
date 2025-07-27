@@ -67,7 +67,11 @@ function addMissingDependenciesToPackageJson(missingDeps) {
       'tailwindcss': '^4.0.13',
       'vite-plugin-static-copy': '^2.1.0',
       'chokidar': '^4.0.1',
-      'glob': '^11.0.0'
+      'glob': '^11.0.0',
+      'react-redux': '^9.2.0',
+      '@reduxjs/toolkit': '^2.5.0',
+      'vite-tsconfig-paths': '^5.1.4',
+      'esbuild': '^0.24.2'
     };
     
     // Agregar dependencias faltantes
@@ -96,23 +100,21 @@ function addMissingDependenciesToPackageJson(missingDeps) {
 
 // Verificar si las dependencias críticas están instaladas
 const criticalDeps = [
-  // Dependencias básicas
-  'vite', 
-  'react', 
-  'react-dom', 
-  '@vitejs/plugin-react',
-  // Dependencias de Tailwind (usadas en vite.config.ts)
-  '@tailwindcss/vite',
+  'vite',
+  '@vitejs/plugin-react', 
   'tailwindcss',
-  // Dependencias de TypeScript
+  '@tailwindcss/vite',
   'typescript',
-  '@types/react',
-  '@types/react-dom', 
-  '@types/node',
-  // Dependencias de plugins de Vite
   'vite-plugin-static-copy',
-  'chokidar',
-  'glob'
+  '@types/react',
+  '@types/react-dom',
+  'react',
+  'react-dom',
+  'react-redux',
+  '@reduxjs/toolkit',
+  'vite-tsconfig-paths',
+  'glob',
+  'esbuild'
 ];
 console.log('📋 Dependency check results:');
 const missingDeps = criticalDeps.filter(dep => !isDependencyInstalled(dep));

@@ -145,6 +145,104 @@ export function themeStyleAnalyzer(options: ThemeStyleAnalyzerOptions = {}): Plu
     return invalidPatterns.some(pattern => pattern.test(trimmed));
   }
 
+  function ensureBalancedCSS(css: string): string {
+    if (!css || !css.trim()) return '';
+    
+    // Count braces
+    const openBraces = (css.match(/\{/g) || []).length;
+    const closeBraces = (css.match(/\}/g) || []).length;
+    
+    let balancedCss = css;
+    
+    // Add missing closing braces
+    if (openBraces > closeBraces) {
+      const missing = openBraces - closeBraces;
+      balancedCss += '\n' + '}'.repeat(missing);
+      console.warn(`⚠️ [THEME-ANALYZER] Added ${missing} missing closing braces to CSS`);
+    }
+    
+    // Remove extra closing braces (keep structure intact)
+    if (closeBraces > openBraces) {
+      const lines = balancedCss.split('\n');
+      const cleanLines: string[] = [];
+      let braceBalance = 0;
+      
+      for (const line of lines) {
+        const openInLine = (line.match(/\{/g) || []).length;
+        const closeInLine = (line.match(/\}/g) || []).length;
+        
+        braceBalance += openInLine;
+        
+        if (closeInLine > 0 && braceBalance >= closeInLine) {
+          braceBalance -= closeInLine;
+          cleanLines.push(line);
+        } else if (closeInLine === 0) {
+          cleanLines.push(line);
+        } else {
+          // Skip lines with excess closing braces
+          console.warn(`⚠️ [THEME-ANALYZER] Skipped line with excess closing braces: ${line.trim()}`);
+        }
+      }
+      
+      balancedCss = cleanLines.join('\n');
+    }
+    
+    // Final validation: ensure no orphaned selectors
+    const lines = balancedCss.split('\n');
+    const finalLines: string[] = [];
+    let expectingBrace = false;
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      
+      if (!line || line.startsWith('/*') || line.endsWith('*/')) {
+        finalLines.push(lines[i]);
+        continue;
+      }
+      
+      // CSS selector followed by opening brace
+      if (line.includes('{')) {
+        expectingBrace = false;
+        finalLines.push(lines[i]);
+      }
+      // CSS property: value;
+      else if (line.includes(':') && (line.endsWith(';') || line.endsWith(','))) {
+        finalLines.push(lines[i]);
+      }
+      // Closing brace
+      else if (line === '}') {
+        finalLines.push(lines[i]);
+      }
+      // CSS selector without opening brace
+      else if (line.match(/^[.#@]?[a-zA-Z][a-zA-Z0-9_-]*/) && !expectingBrace) {
+        // Check if next non-empty line has opening brace
+        let hasFollowingBrace = false;
+        for (let j = i + 1; j < lines.length; j++) {
+          const nextLine = lines[j].trim();
+          if (!nextLine) continue;
+          if (nextLine.includes('{')) {
+            hasFollowingBrace = true;
+            break;
+          }
+          break;
+        }
+        
+        if (hasFollowingBrace) {
+          finalLines.push(lines[i]);
+          expectingBrace = true;
+        } else {
+          console.warn(`⚠️ [THEME-ANALYZER] Skipped orphaned selector: ${line}`);
+        }
+      }
+      else {
+        // Skip other potentially problematic lines
+        console.warn(`⚠️ [THEME-ANALYZER] Skipped unrecognized CSS: ${line}`);
+      }
+    }
+    
+    return finalLines.join('\n');
+  }
+
   function scopeThemeStyles(css: string): string {
     if (!css) return css;
 
@@ -315,7 +413,10 @@ ${themeStyles}
         
         const combinedCss = extractedStyles + (embeddedCss ? `\n\n/* ====== EMBEDDED LIQUID CSS ====== */\n${embeddedCss}` : '');
         
-        generateCombinedStyles(combinedCss, outputPath);
+        // Ensure the final CSS is well-formed and balanced
+        const balancedCss = ensureBalancedCSS(combinedCss);
+        
+        generateCombinedStyles(balancedCss, outputPath);
         console.log(`✅ [THEME-ANALYZER] Theme styles extracted to ${outputPath}`);
         
         if (embeddedCss) {

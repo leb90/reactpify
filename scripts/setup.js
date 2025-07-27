@@ -248,7 +248,9 @@ function copySrcFiles() {
   const srcDirs = [
     'src/styles',
     'src/utils',
-    'src/components'
+    'src/components',
+    'src/redux',
+    'src/snippets'
   ];
 
   srcDirs.forEach(srcDir => {
