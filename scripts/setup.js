@@ -123,9 +123,9 @@ function updateThemeLayout() {
   // Add JS before closing </body>
   if (!content.includes('main.js')) {
     content = content.replace(
-      /<\/body>/i,
+    /<\/body>/i,
       `  {{ 'main.js' | asset_url | script_tag }}\n</body>`
-    );
+  );
   }
 
   fs.writeFileSync(layoutPath, content);
@@ -250,12 +250,12 @@ export const Test: React.FC<TestProps> = ({
         <h1 className="text-2xl font-bold mb-4">{title}</h1>
         
         {showButton && (
-          <button 
+        <button 
             onClick={() => setClicked(!clicked)}
             className="bg-white text-blue-500 px-4 py-2 rounded hover:bg-gray-100 transition-colors font-semibold"
-          >
+        >
             {clicked ? '✅ Clicked!' : '👋 Click me'}
-          </button>
+        </button>
         )}
       </div>
     </div>
@@ -317,6 +317,71 @@ Component: Test
   log('✅ Created Test component with Liquid template', 'green');
 }
 
+function createUtilityFiles() {
+  // Create renderComponents helper
+  const renderComponentsPath = 'src/utils/helpers/renderComponents.tsx';
+  const renderComponentsDir = path.dirname(renderComponentsPath);
+  
+  if (!fs.existsSync(renderComponentsDir)) {
+    fs.mkdirSync(renderComponentsDir, { recursive: true });
+  }
+
+  if (!checkFileExists(renderComponentsPath)) {
+    const renderComponentsCode = `import React from 'react';
+import { createRoot } from 'react-dom/client';
+
+interface ComponentRegistry {
+  [key: string]: React.ComponentType<any>;
+}
+
+const componentRegistry: ComponentRegistry = {};
+
+export function registerComponent(name: string, component: React.ComponentType<any>) {
+  componentRegistry[name] = component;
+}
+
+export function initRenderSystem() {
+  document.addEventListener('DOMContentLoaded', () => {
+    const componentRoots = document.querySelectorAll('[data-component-root]');
+    
+    componentRoots.forEach((element) => {
+      const componentName = element.getAttribute('data-component-root');
+      const sectionDataElement = element.querySelector('[data-section-data]');
+      
+      if (!componentName || !componentRegistry[componentName]) {
+        return;
+      }
+
+      let sectionData = {};
+      if (sectionDataElement) {
+        try {
+          const dataAttr = sectionDataElement.getAttribute('data-section-data');
+          sectionData = dataAttr ? JSON.parse(dataAttr) : {};
+        } catch (error) {
+          console.warn('Failed to parse section data:', error);
+        }
+      }
+
+      const Component = componentRegistry[componentName];
+      const props = sectionData.settings || {};
+      
+      // Hide fallback content
+      const fallback = element.querySelector('[data-fallback]');
+      if (fallback) {
+        fallback.style.display = 'none';
+      }
+
+      const root = createRoot(element);
+      root.render(React.createElement(Component, props));
+    });
+  });
+}`;
+
+    fs.writeFileSync(renderComponentsPath, renderComponentsCode);
+    log('✅ Created renderComponents helper', 'green');
+  }
+}
+
 function createMainEntry() {
   const mainPath = 'src/main.tsx';
   
@@ -340,31 +405,85 @@ console.log('✅ Reactpify initialized successfully');`;
   log('✅ Created main entry point', 'green');
 }
 
-function updatePackageJson() {
+function createOrUpdatePackageJson() {
   const packagePath = 'package.json';
+  let pkg = {};
   
-  if (!checkFileExists(packagePath)) {
-    log('⚠️  package.json not found in theme', 'yellow');
-    return;
+  // Load existing package.json or create new one
+  if (checkFileExists(packagePath)) {
+    try {
+      pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+      log('📦 Found existing package.json, updating...', 'blue');
+    } catch (error) {
+      log('⚠️  Invalid package.json, creating new one...', 'yellow');
+      pkg = {};
+    }
+  } else {
+    log('📦 Creating new package.json...', 'blue');
+    pkg = {};
   }
 
+  // Ensure basic package.json structure
+  if (!pkg.name) pkg.name = path.basename(process.cwd());
+  if (!pkg.version) pkg.version = '1.0.0';
+  if (!pkg.description) pkg.description = 'Shopify theme with React components powered by Reactpify';
+  if (!pkg.private) pkg.private = true;
+  if (!pkg.type) pkg.type = 'module';
+
+  // Add/update scripts
+  if (!pkg.scripts) pkg.scripts = {};
+  pkg.scripts.build = 'vite build';
+  pkg.scripts.watch = 'vite build --watch --mode development';
+  pkg.scripts.dev = 'vite serve --mode development';
+  pkg.scripts.preview = 'vite preview';
+  pkg.scripts['type-check'] = 'tsc --noEmit';
+
+  // Add devDependencies
+  if (!pkg.devDependencies) pkg.devDependencies = {};
+  
+  const requiredDeps = {
+    '@vitejs/plugin-react': '^4.3.4',
+    '@tailwindcss/vite': '^4.0.13',
+    'vite': '^6.0.7',
+    'typescript': '~5.7.3',
+    'react': '^19.1.0',
+    'react-dom': '^19.1.0',
+    '@types/react': '^19.0.2',
+    '@types/react-dom': '^19.0.2',
+    '@types/node': '^22.10.2',
+    'tailwindcss': '^4.0.13',
+    'vite-plugin-static-copy': '^2.1.0',
+    'chokidar': '^4.0.1',
+    'glob': '^11.0.0'
+  };
+
+  // Add required dependencies
+  Object.entries(requiredDeps).forEach(([dep, version]) => {
+    if (!pkg.devDependencies[dep]) {
+      pkg.devDependencies[dep] = version;
+    }
+  });
+
+  // Write the updated package.json
+  fs.writeFileSync(packagePath, JSON.stringify(pkg, null, 2));
+  log('✅ Package.json created/updated with all required dependencies', 'green');
+  
+  return pkg;
+}
+
+function installDependencies() {
+  log('📦 Installing dependencies...', 'blue');
+  log('⏳ This may take a few minutes...', 'yellow');
+  
   try {
-    const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
-    
-    // Add Reactpify scripts if they don't exist
-    if (!pkg.scripts) pkg.scripts = {};
-    
-    if (!pkg.scripts.watch) {
-      pkg.scripts.watch = 'vite build --watch --mode development';
-    }
-    if (!pkg.scripts.build) {
-      pkg.scripts.build = 'vite build';
-    }
-    
-    fs.writeFileSync(packagePath, JSON.stringify(pkg, null, 2));
-    log('✅ Updated package.json with Reactpify scripts', 'green');
+    execSync('npm install', { 
+      stdio: 'inherit',
+      cwd: process.cwd()
+    });
+    log('✅ Dependencies installed successfully', 'green');
   } catch (error) {
-    log('⚠️  Could not update package.json', 'yellow');
+    log('⚠️  Warning: Could not install dependencies automatically', 'yellow');
+    log('   Please run "npm install" manually after setup completes', 'yellow');
   }
 }
 
@@ -392,9 +511,16 @@ function runSetup() {
   log('🔌 Installing Vite plugins...', 'blue');
   copyVitePlugins();
 
-  // Update theme.liquid
-  log('📝 Updating layout/theme.liquid...', 'blue');
-  const themeUpdated = updateThemeLayout();
+  // Create/update package.json with all dependencies
+  log('📦 Setting up package.json...', 'blue');
+  createOrUpdatePackageJson();
+
+  // Install dependencies automatically
+  installDependencies();
+
+  // Create utility files
+  log('🛠️  Creating utility files...', 'blue');
+  createUtilityFiles();
 
   // Create test component
   log('🎨 Creating test component...', 'blue');
@@ -404,9 +530,9 @@ function runSetup() {
   log('⚙️  Creating main entry point...', 'blue');
   createMainEntry();
 
-  // Update package.json
-  log('📦 Updating package.json...', 'blue');
-  updatePackageJson();
+  // Update theme.liquid
+  log('📝 Updating layout/theme.liquid...', 'blue');
+  const themeUpdated = updateThemeLayout();
 
   // Success message
   log('\n🎉 Reactpify installed successfully!', 'green');
