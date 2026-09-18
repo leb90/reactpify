@@ -7,26 +7,10 @@
 
 import fs from 'fs';
 import path from 'path';
-import { spawn } from 'child_process';
 import { fileURLToPath } from 'url';
 
 const PACKAGE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const THEME_MARKER = '{% comment %} Reactpify {% endcomment %}';
-
-const REQUIRED_DEV_DEPENDENCIES = {
-  '@reduxjs/toolkit': '^2.12.0',
-  '@tailwindcss/vite': '^4.3.3',
-  '@types/node': '^24.13.5',
-  '@types/react': '^19.3.0',
-  '@types/react-dom': '^19.3.0',
-  '@vitejs/plugin-react': '^6.1.1',
-  react: '^19.3.0',
-  'react-dom': '^19.3.0',
-  'react-redux': '^9.3.0',
-  tailwindcss: '^4.3.3',
-  typescript: '~5.9.3',
-  vite: '^8.3.0'
-};
 
 const CONFIG_FILES = [
   'vite.config.ts',
@@ -209,34 +193,8 @@ function updatePackageJson() {
     'type-check': 'tsc --noEmit'
   };
 
-  pkg.devDependencies ??= {};
-  const added = [];
-
-  for (const [name, version] of Object.entries(REQUIRED_DEV_DEPENDENCIES)) {
-    if (!pkg.devDependencies[name]) {
-      pkg.devDependencies[name] = version;
-      added.push(name);
-    }
-  }
-
   fs.writeFileSync(packagePath, `${JSON.stringify(pkg, null, 2)}\n`);
-  log(`✅ package.json updated (${added.length} dependency/ies added)`, 'green');
-
-  return added.length > 0;
-}
-
-function installDependencies() {
-  return new Promise((resolve) => {
-    const isWindows = process.platform === 'win32';
-    const child = spawn(isWindows ? 'npm.cmd' : 'npm', ['install'], {
-      stdio: 'inherit',
-      cwd: process.cwd(),
-      shell: isWindows
-    });
-
-    child.on('close', (code) => resolve(code === 0));
-    child.on('error', () => resolve(false));
-  });
+  log('✅ package.json updated', 'green');
 }
 
 function createExampleComponent() {
@@ -281,7 +239,7 @@ export const Test = ({ title = 'Hello World', showButton = true }: TestProps) =>
   log('✅ Created example component src/components/test/Test.tsx', 'green');
 }
 
-async function runSetup() {
+function runSetup() {
   const themeDirectory = resolveThemeDirectory();
 
   if (themeDirectory === PACKAGE_ROOT) {
@@ -304,17 +262,8 @@ async function runSetup() {
   installProjectFiles();
   createExampleComponent();
 
-  const needsInstall = updatePackageJson();
+  updatePackageJson();
   const themeUpdated = updateThemeLayout();
-
-  if (needsInstall) {
-    log('📦 Installing dependencies...', 'blue');
-    const installed = await installDependencies();
-
-    if (!installed) {
-      log('⚠️  Dependency install failed. Run "npm install" manually.', 'yellow');
-    }
-  }
 
   log('\n🎉 Reactpify installed successfully!', 'green');
   log('\n📋 Next steps:', 'bold');
@@ -329,7 +278,10 @@ async function runSetup() {
   log('\n📖 https://github.com/leb90/reactpify', 'yellow');
 }
 
-runSetup().catch((error) => {
+try {
+  runSetup();
+} catch (error) {
   log(`❌ Reactpify setup failed: ${error.message}`, 'red');
+  log('   Run "npx reactpify" from your theme directory to retry.', 'yellow');
   process.exitCode = 1;
-});
+}
