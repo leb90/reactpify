@@ -1,202 +1,322 @@
 import React from 'react';
-import { createRoot } from 'react-dom/client';
+import { createRoot, type Root } from 'react-dom/client';
 import { Provider } from 'react-redux';
 import { store } from '../../redux';
 
-type ComponentType = React.ComponentType<any>;
+type ComponentProps = Record<string, unknown>;
+type ComponentType = React.ComponentType<ComponentProps>;
 
 interface ComponentRegistry {
   [key: string]: ComponentType;
 }
 
+interface MountedInstance {
+  root: Root;
+  mountNode: HTMLElement;
+}
+
 const componentRegistry: ComponentRegistry = {};
+const mountedInstances = new WeakMap<HTMLElement, MountedInstance>();
 
-/**
- * Registra un componente en el sistema
- */
-export function registerComponent(name: string, component: ComponentType) {
+const COMPONENT_ROOT_SELECTOR = '[data-component-root]';
+const SECTION_DATA_SELECTOR = 'script[type="application/json"][data-section-data]';
+const MOUNT_NODE_CLASS = 'reactpify-root';
+
+const isDevelopment = import.meta.env.DEV;
+
+function logDebug(...args: unknown[]): void {
+  if (isDevelopment) {
+    console.log('[reactpify]', ...args);
+  }
+}
+
+function logError(...args: unknown[]): void {
+  console.error('[reactpify]', ...args);
+}
+
+export function registerComponent(name: string, component: ComponentType): void {
   componentRegistry[name] = component;
-  console.log(`🔧 Component registered: ${name}`);
+  logDebug(`component registered: ${name}`);
 }
 
-/**
- * Obtiene el registro completo de componentes
- */
 export function getComponentRegistry(): ComponentRegistry {
-  return componentRegistry;
+  return { ...componentRegistry };
 }
 
-/**
- * Maneja la hidratación de un componente específico
- */
-function hydrateComponent(container: HTMLElement, componentName: string, props: any) {
-  const Component = componentRegistry[componentName];
-  
-  if (!Component) {
-    console.error(`❌ Component not found: ${componentName}`);
-    container.innerHTML = `
-      <div class="reactpify-error">
-        <strong>Error:</strong> Component "${componentName}" not found
-      </div>
-    `;
+function snakeToCamel(key: string): string {
+  return key.replace(/_([a-z0-9])/g, (_, char: string) => char.toUpperCase());
+}
+
+function camelizeKeys(source: ComponentProps): ComponentProps {
+  return Object.fromEntries(
+    Object.entries(source).map(([key, value]) => [snakeToCamel(key), value])
+  );
+}
+
+function parseJson(raw: string | null, context: string): ComponentProps | null {
+  if (!raw || !raw.trim()) return null;
+
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return typeof parsed === 'object' && parsed !== null ? (parsed as ComponentProps) : null;
+  } catch (error) {
+    logError(`invalid JSON in ${context}:`, error);
+    return null;
+  }
+}
+
+function findOwnDataPayload(container: HTMLElement): ComponentProps | null {
+  const script = container.querySelector<HTMLScriptElement>(SECTION_DATA_SELECTOR);
+
+  if (script && script.closest(COMPONENT_ROOT_SELECTOR) === container) {
+    return parseJson(script.textContent, 'data-section-data script');
+  }
+
+  return parseJson(container.getAttribute('data-section-data'), 'data-section-data attribute');
+}
+
+function extractProps(container: HTMLElement): ComponentProps {
+  const payload = findOwnDataPayload(container);
+  if (!payload) return {};
+
+  const settings = payload.settings;
+  const source =
+    typeof settings === 'object' && settings !== null
+      ? (settings as ComponentProps)
+      : payload;
+
+  return camelizeKeys(source);
+}
+
+interface ErrorBoundaryProps {
+  componentName: string;
+  children: React.ReactNode;
+}
+
+class ComponentErrorBoundary extends React.Component<
+  ErrorBoundaryProps,
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error) {
+    logError(`component "${this.props.componentName}" crashed:`, error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return isDevelopment ? (
+        <div className="reactpify-error">
+          Component &quot;{this.props.componentName}&quot; failed to render.
+        </div>
+      ) : null;
+    }
+
+    return this.props.children;
+  }
+}
+
+function hideFallback(container: HTMLElement): void {
+  container
+    .querySelectorAll<HTMLElement>('[data-fallback]')
+    .forEach((fallback) => {
+      if (fallback.closest(COMPONENT_ROOT_SELECTOR) === container) {
+        fallback.hidden = true;
+      }
+    });
+}
+
+function showFallback(container: HTMLElement): void {
+  container
+    .querySelectorAll<HTMLElement>('[data-fallback]')
+    .forEach((fallback) => {
+      fallback.hidden = false;
+    });
+}
+
+function createMountNode(container: HTMLElement): HTMLElement {
+  const mountNode = document.createElement('div');
+  mountNode.className = MOUNT_NODE_CLASS;
+  container.appendChild(mountNode);
+  return mountNode;
+}
+
+function renderError(container: HTMLElement, message: string): void {
+  if (!isDevelopment) return;
+
+  const notice = document.createElement('div');
+  notice.className = 'reactpify-error';
+  notice.textContent = message;
+  container.appendChild(notice);
+}
+
+export function mountComponent(container: HTMLElement): void {
+  if (mountedInstances.has(container)) return;
+
+  const componentName = container.getAttribute('data-component-root');
+
+  if (!componentName) {
+    logError(
+      'a [data-component-root] element has no component name. ' +
+        'Use data-component-root="ComponentName".',
+      container
+    );
     return;
   }
 
-  try {
-    // Marcar como loading
-    container.classList.add('reactpify-loading');
-    
-    // Crear root y renderizar
-    const root = createRoot(container);
-    
-    root.render(
-      <Provider store={store}>
-        <div className="reactpify-component">
-          <Component {...props} />
-        </div>
-      </Provider>
+  const Component = componentRegistry[componentName];
+
+  if (!Component) {
+    logError(
+      `component "${componentName}" is not registered. ` +
+        `Registered components: ${Object.keys(componentRegistry).join(', ') || 'none'}`
     );
+    renderError(container, `Reactpify: component "${componentName}" not found`);
+    return;
+  }
 
-    // Marcar como hidratado después del render
-    setTimeout(() => {
-      container.classList.remove('reactpify-loading');
-      container.classList.add('reactpify-hydrated');
-      
-      // Evento personalizado para notificar hidratación
-      const event = new CustomEvent('reactpify:hydrated', {
-        detail: { componentName, props }
-      });
-      container.dispatchEvent(event);
-      
-      console.log(`✅ Component hydrated: ${componentName}`);
-    }, 0);
+  const props = extractProps(container);
+  const mountNode = createMountNode(container);
+  const root = createRoot(mountNode);
 
-  } catch (error) {
-    console.error(`❌ Error hydrating component ${componentName}:`, error);
-    container.classList.remove('reactpify-loading');
-    container.classList.add('reactpify-error');
-    container.innerHTML = `
-      <div class="reactpify-error">
-        <strong>Hydration Error:</strong> ${componentName}<br>
-        <small>${error instanceof Error ? error.message : 'Unknown error'}</small>
-      </div>
-    `;
+  mountedInstances.set(container, { root, mountNode });
+  container.classList.add('reactpify-hydrated');
+  hideFallback(container);
+
+  root.render(
+    <Provider store={store}>
+      <ComponentErrorBoundary componentName={componentName}>
+        <Component {...props} />
+      </ComponentErrorBoundary>
+    </Provider>
+  );
+
+  container.dispatchEvent(
+    new CustomEvent('reactpify:hydrated', {
+      bubbles: true,
+      detail: { componentName, props }
+    })
+  );
+
+  logDebug(`mounted ${componentName}`, props);
+}
+
+export function unmountComponent(container: HTMLElement): void {
+  const instance = mountedInstances.get(container);
+  if (!instance) return;
+
+  instance.root.unmount();
+  instance.mountNode.remove();
+  mountedInstances.delete(container);
+
+  container.classList.remove('reactpify-hydrated');
+  showFallback(container);
+
+  logDebug('unmounted', container.getAttribute('data-component-root'));
+}
+
+function mountWithin(scope: ParentNode): void {
+  scope
+    .querySelectorAll<HTMLElement>(COMPONENT_ROOT_SELECTOR)
+    .forEach(mountComponent);
+}
+
+function unmountWithin(scope: ParentNode): void {
+  scope
+    .querySelectorAll<HTMLElement>(COMPONENT_ROOT_SELECTOR)
+    .forEach(unmountComponent);
+}
+
+function scanDocument(): void {
+  mountWithin(document);
+}
+
+function watchDynamicContent(): void {
+  const observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      for (const node of mutation.addedNodes) {
+        if (!(node instanceof HTMLElement)) continue;
+
+        if (node.matches(COMPONENT_ROOT_SELECTOR)) {
+          mountComponent(node);
+        }
+
+        mountWithin(node);
+      }
+    }
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+}
+
+function listenToThemeEditor(): void {
+  document.addEventListener('shopify:section:load', (event) => {
+    const target = (event as CustomEvent).target;
+    if (target instanceof HTMLElement) mountWithin(target);
+  });
+
+  document.addEventListener('shopify:section:unload', (event) => {
+    const target = (event as CustomEvent).target;
+    if (target instanceof HTMLElement) unmountWithin(target);
+  });
+}
+
+function isDebugRequested(): boolean {
+  try {
+    return (
+      new URLSearchParams(window.location.search).has('reactpify-debug') ||
+      window.localStorage.getItem('reactpify-debug') === 'true'
+    );
+  } catch {
+    return false;
   }
 }
 
-/**
- * Inicializa el sistema de renderizado
- */
-export function initRenderSystem() {
-  console.log('🚀 Initializing Reactpify render system...');
-  
-  // Detectar modo debug
-  const isDebugMode = window.location.search.includes('reactpify-debug') || 
-                     localStorage.getItem('reactpify-debug') === 'true';
-  
-  if (isDebugMode) {
-    document.documentElement.setAttribute('data-reactpify-debug', 'true');
-    console.log('🐛 Debug mode enabled');
-  }
+function exposeDebugApi(): void {
+  Object.defineProperty(window, 'reactpify', {
+    value: {
+      registry: getComponentRegistry,
+      refresh: scanDocument,
+      mount: mountComponent,
+      unmount: unmountComponent
+    },
+    configurable: true
+  });
+}
 
-  // Función para procesar componentes
-  function processComponents() {
-    const components = document.querySelectorAll('[data-component-root]');
-    
-    if (components.length === 0) {
-      console.log('ℹ️ No components found on this page');
-      return;
+let isInitialized = false;
+
+export function initRenderSystem(): void {
+  if (isInitialized) return;
+  isInitialized = true;
+
+  const start = () => {
+    const debugEnabled = isDebugRequested();
+
+    if (debugEnabled) {
+      document.documentElement.setAttribute('data-reactpify-debug', 'true');
     }
 
-    console.log(`🔍 Found ${components.length} component(s) to hydrate`);
+    scanDocument();
+    watchDynamicContent();
+    listenToThemeEditor();
+    window.addEventListener('reactpify:refresh', scanDocument);
 
-    components.forEach((container) => {
-      const componentName = container.getAttribute('data-component-root');
-      
-      if (!componentName) {
-        console.warn('⚠️ Component container missing data-component-root attribute', container);
-        return;
-      }
+    if (isDevelopment || debugEnabled) exposeDebugApi();
 
-      // Verificar si ya está hidratado
-      if (container.classList.contains('reactpify-hydrated')) {
-        console.log(`⏭️ Component already hydrated: ${componentName}`);
-        return;
-      }
+    logDebug(
+      `render system ready with ${Object.keys(componentRegistry).length} component(s)`,
+      Object.keys(componentRegistry)
+    );
+  };
 
-      // Buscar datos del componente
-      const dataScript = container.querySelector('script[data-section-data]');
-      let props = {};
-
-      if (dataScript) {
-        try {
-          props = JSON.parse(dataScript.textContent || '{}');
-          console.log(`📄 Props loaded for ${componentName}:`, props);
-        } catch (error) {
-          console.warn(`⚠️ Failed to parse props for ${componentName}:`, error);
-        }
-      } else {
-        console.log(`ℹ️ No props found for ${componentName}, using defaults`);
-      }
-
-      // Hidratar el componente
-      hydrateComponent(container as HTMLElement, componentName, props);
-    });
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start, { once: true });
+  } else {
+    start();
   }
-
-  // Procesar componentes existentes
-  processComponents();
-
-  // Observer para componentes dinámicos (ej: AJAX loads)
-  const observer = new MutationObserver((mutations) => {
-    let hasNewComponents = false;
-    
-    mutations.forEach((mutation) => {
-      mutation.addedNodes.forEach((node) => {
-        if (node.nodeType === Node.ELEMENT_NODE) {
-          const element = node as Element;
-          
-          // Verificar si es un componente o contiene componentes
-          if (element.hasAttribute?.('data-component-root') || 
-              element.querySelector?.('[data-component-root]')) {
-            hasNewComponents = true;
-          }
-        }
-      });
-    });
-
-    if (hasNewComponents) {
-      console.log('🔄 New components detected, processing...');
-      setTimeout(processComponents, 0);
-    }
-  });
-
-  // Observar cambios en el DOM
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true
-  });
-
-  // Event listeners globales
-  window.addEventListener('reactpify:refresh', processComponents);
-  
-  // API global para debugging
-  if (isDebugMode) {
-    (window as any).reactpify = {
-      registry: componentRegistry,
-      refresh: processComponents,
-      hydrate: hydrateComponent,
-      enableDebug: () => {
-        document.documentElement.setAttribute('data-reactpify-debug', 'true');
-        localStorage.setItem('reactpify-debug', 'true');
-      },
-      disableDebug: () => {
-        document.documentElement.removeAttribute('data-reactpify-debug');
-        localStorage.removeItem('reactpify-debug');
-      }
-    };
-  }
-
-  console.log('✅ Reactpify render system initialized');
-  console.log(`📦 ${Object.keys(componentRegistry).length} component(s) registered:`, Object.keys(componentRegistry));
-} 
+}

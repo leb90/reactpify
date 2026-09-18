@@ -1,11 +1,12 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
@@ -14,6 +15,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
+    "types": ["vite/client", "node"],
     "baseUrl": ".",
     "paths": {
       "@components/*": ["src/utils/components/*"],
@@ -23,6 +25,16 @@
       "@src/*": ["src/*"]
     }
   },
-  "include": ["build-scripts/**/*", "assets/**/*", "src/**/*", "vite-plugins/**/*"],
-  "exclude": ["node_modules", "sections", "snippets", "templates", "layout", "blocks", "config", "locales"]
+  "include": ["src/**/*", "vite-plugins/**/*", "vite.config.ts", "vite-fragment-injection.ts"],
+  "exclude": [
+    "node_modules",
+    "assets",
+    "sections",
+    "snippets",
+    "templates",
+    "layout",
+    "blocks",
+    "config",
+    "locales"
+  ]
 }

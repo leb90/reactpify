@@ -1,0 +1,10 @@
+extends: theme-check:recommended
+
+# Reactpify keeps the Liquid sources under src/. Those files contain
+# FRAGMENT.* placeholders and are not valid theme files until the build
+# injects the fragments and copies them into sections/ and snippets/.
+ignore:
+  - node_modules/**
+  - src/**
+  - vite-plugins/**
+  - scripts/**

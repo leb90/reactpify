@@ -1,0 +1,12 @@
+node_modules/*
+src/*
+vite-plugins/*
+scripts/*
+*.ts
+*.tsx
+package.json
+package-lock.json
+tsconfig*.json
+.env
+.env.*
+assets/*.map

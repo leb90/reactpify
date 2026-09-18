@@ -26,11 +26,10 @@ build/
 # Shopify CLI
 .shopify/
 
-.shopifyignore
-
 # Compiled React bundle (auto-generated)
 assets/reactpify.js
 assets/reactpify.js.map
+assets/reactpify.css
 
 # Auto-generated Liquid files (copied from src/)
 sections/product-gallery.liquid
