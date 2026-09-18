@@ -35,22 +35,47 @@ function loadEnvFile() {
 const command = process.argv[2];
 const env = loadEnvFile();
 
-// Set default values if not in .env
-const SHOPIFY_STORE = env.SHOPIFY_STORE || 'test-forleb.myshopify.com';
-const SHOPIFY_DEV_THEME_ID = env.SHOPIFY_DEV_THEME_ID || '150788800766';
-const SHOPIFY_PROD_THEME_ID = env.SHOPIFY_PROD_THEME_ID || '';
+const SHOPIFY_STORE = env.SHOPIFY_STORE || process.env.SHOPIFY_STORE;
+const SHOPIFY_DEV_THEME_ID = env.SHOPIFY_DEV_THEME_ID || process.env.SHOPIFY_DEV_THEME_ID || '';
+const SHOPIFY_PROD_THEME_ID = env.SHOPIFY_PROD_THEME_ID || process.env.SHOPIFY_PROD_THEME_ID || '';
 
-// Command mappings
+if (!SHOPIFY_STORE) {
+  console.error('❌ SHOPIFY_STORE is not set. Add it to your .env file:');
+  console.error('   SHOPIFY_STORE=your-store.myshopify.com');
+  process.exit(1);
+}
+
+// Secrets travel through the environment so they never reach the printed
+// command line or the shell history.
+const secretEnv = {};
+const storePassword = env.SHOPIFY_STORE_PASSWORD || process.env.SHOPIFY_STORE_PASSWORD;
+const themeToken = env.SHOPIFY_CLI_THEME_TOKEN || process.env.SHOPIFY_CLI_THEME_TOKEN;
+
+if (storePassword) secretEnv.SHOPIFY_FLAG_STORE_PASSWORD = storePassword;
+if (themeToken) secretEnv.SHOPIFY_CLI_THEME_TOKEN = themeToken;
+
+function resolveShopifyBinary() {
+  try {
+    execSync('shopify version', { stdio: 'ignore' });
+    return 'shopify';
+  } catch {
+    console.log('ℹ️  Shopify CLI not found on PATH, falling back to npx.');
+    return 'npx --yes @shopify/cli';
+  }
+}
+
+const cli = resolveShopifyBinary();
+
 const commands = {
-  'dev': `shopify theme dev --store=${SHOPIFY_STORE}`,
-  'dev:theme': `shopify theme dev --store=${SHOPIFY_STORE} --theme=${SHOPIFY_DEV_THEME_ID}`,
-  'push': `shopify theme push --store=${SHOPIFY_STORE}`,
-  'push:dev': `shopify theme push --store=${SHOPIFY_STORE} --theme=${SHOPIFY_DEV_THEME_ID}`,
-  'push:prod': SHOPIFY_PROD_THEME_ID ? 
-    `shopify theme push --store=${SHOPIFY_STORE} --theme=${SHOPIFY_PROD_THEME_ID}` :
-    `shopify theme push --store=${SHOPIFY_STORE}`,
-  'pull': `shopify theme pull --store=${SHOPIFY_STORE}`,
-  'pull:dev': `shopify theme pull --store=${SHOPIFY_STORE} --theme=${SHOPIFY_DEV_THEME_ID}`,
+  'dev': `${cli} theme dev --store=${SHOPIFY_STORE}`,
+  'dev:theme': `${cli} theme dev --store=${SHOPIFY_STORE} --theme=${SHOPIFY_DEV_THEME_ID}`,
+  'push': `${cli} theme push --store=${SHOPIFY_STORE}`,
+  'push:dev': `${cli} theme push --store=${SHOPIFY_STORE} --theme=${SHOPIFY_DEV_THEME_ID}`,
+  'push:prod': SHOPIFY_PROD_THEME_ID
+    ? `${cli} theme push --store=${SHOPIFY_STORE} --theme=${SHOPIFY_PROD_THEME_ID}`
+    : `${cli} theme push --store=${SHOPIFY_STORE}`,
+  'pull': `${cli} theme pull --store=${SHOPIFY_STORE}`,
+  'pull:dev': `${cli} theme pull --store=${SHOPIFY_STORE} --theme=${SHOPIFY_DEV_THEME_ID}`,
 };
 
 if (!command || !commands[command]) {
@@ -68,7 +93,7 @@ console.log(`🛍️ Running: ${commands[command]}`);
 try {
   execSync(commands[command], {
     stdio: 'inherit',
-    env: { ...process.env, ...env }
+    env: { ...process.env, ...env, ...secretEnv }
   });
 } catch (error) {
   console.error('❌ Command failed:', error.message);

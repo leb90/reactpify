@@ -1,66 +1,76 @@
-/* Componentes específicos de Reactpify */
-
-/* Reset específico para elementos dentro de componentes */
-[data-component-root] *,
-[data-component-root] *::before,
-[data-component-root] *::after {
-  box-sizing: border-box;
-  border-width: 0;
-  border-style: solid;
-  border-color: #e5e7eb;
+.reactpify-component {
+  font-family: var(--reactpify-font-family);
+  color: var(--reactpify-text);
 }
 
-[data-component-root] h1,
-[data-component-root] h2,
-[data-component-root] h3,
-[data-component-root] h4,
-[data-component-root] h5,
-[data-component-root] h6 {
-  font-size: inherit;
-  font-weight: inherit;
-  margin: 0;
+.reactpify-container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--reactpify-spacing-md);
+  padding-right: var(--reactpify-spacing-md);
 }
 
-[data-component-root] p {
-  margin: 0;
+.reactpify-container-sm {
+  max-width: 640px;
 }
 
-[data-component-root] button {
-  background-color: transparent;
-  background-image: none;
-  border: 0;
-  color: inherit;
-  font-family: inherit;
-  font-size: 100%;
-  font-weight: inherit;
-  line-height: inherit;
-  margin: 0;
-  padding: 0;
-  cursor: pointer;
+.reactpify-container-md {
+  max-width: 768px;
 }
 
-/* Utilidades para glassmorphism */
+.reactpify-container-lg {
+  max-width: 1024px;
+}
+
+.reactpify-container-xl {
+  max-width: 1280px;
+}
+
+.reactpify-card {
+  background-color: var(--reactpify-background);
+  border: 1px solid var(--reactpify-border);
+  border-radius: var(--reactpify-border-radius);
+  box-shadow: var(--reactpify-shadow);
+}
+
+.reactpify-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border: 1px solid transparent;
+  border-radius: var(--reactpify-border-radius);
+  font-size: var(--reactpify-font-size-sm);
+  font-weight: 500;
+}
+
+.reactpify-btn-primary {
+  background-color: var(--reactpify-primary);
+  color: #ffffff;
+}
+
+.reactpify-btn-secondary {
+  background-color: var(--reactpify-secondary);
+  color: #ffffff;
+}
+
+.reactpify-btn-primary:hover,
+.reactpify-btn-secondary:hover {
+  opacity: 0.9;
+}
+
 .reactpify-glassmorphism {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgb(255 255 255 / 0.1);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgb(255 255 255 / 0.2);
 }
 
-/* Text gradients */
-.reactpify-text-gradient {
-  background: linear-gradient(45deg, var(--reactpify-primary), var(--reactpify-accent));
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-/* Estados de loading */
 .reactpify-loading {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
-  color: var(--reactpify-gray-500);
+  padding: var(--reactpify-spacing-xl);
 }
 
 .reactpify-loading::before {
@@ -71,16 +81,15 @@
   border-top-color: transparent;
   border-radius: 50%;
   animation: reactpify-spin 1s linear infinite;
-  margin-right: 0.5rem;
+  margin-right: var(--reactpify-spacing-sm);
 }
 
-/* Estados de error */
 .reactpify-error {
-  padding: 1rem;
+  padding: var(--reactpify-spacing-md);
   background-color: #fef2f2;
   border: 1px solid #fecaca;
-  border-radius: 0.5rem;
+  border-radius: var(--reactpify-border-radius-lg);
   color: #dc2626;
   font-family: ui-monospace, monospace;
-  font-size: 0.875rem;
-} 
+  font-size: var(--reactpify-font-size-sm);
+}

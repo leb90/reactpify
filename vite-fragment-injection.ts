@@ -1,78 +1,84 @@
 import fs from 'fs';
 import path from 'path';
 
-/**
- * Fragment injection system for Liquid templates
- * Replaces FRAGMENT.fragment-name with actual content from schema-fragments
- */
-
 const FRAGMENTS_DIR = 'src/utils/schema-fragments';
+const FRAGMENT_PATTERN = /([ \t]*)FRAGMENT\.([a-zA-Z0-9-_]+)/g;
 
-/**
- * Load all available fragments from the schema-fragments directory
- */
+let fragmentCache: Record<string, string> | null = null;
+
+export function invalidateFragmentCache(): void {
+  fragmentCache = null;
+}
+
+function stripLeadingComments(content: string): string {
+  return content.replace(/<!--[\s\S]*?-->/g, '').trim();
+}
+
 function loadFragments(): Record<string, string> {
+  if (fragmentCache) return fragmentCache;
+
   const fragments: Record<string, string> = {};
-  
+
   if (!fs.existsSync(FRAGMENTS_DIR)) {
-    console.log(`📁 Creating fragments directory: ${FRAGMENTS_DIR}`);
     fs.mkdirSync(FRAGMENTS_DIR, { recursive: true });
+    fragmentCache = fragments;
     return fragments;
   }
 
-  const fragmentFiles = fs.readdirSync(FRAGMENTS_DIR)
-    .filter(file => file.endsWith('.liquid'));
+  for (const file of fs.readdirSync(FRAGMENTS_DIR)) {
+    if (!file.endsWith('.liquid')) continue;
 
-  for (const file of fragmentFiles) {
-    const fragmentName = path.basename(file, '.liquid');
-    const fragmentPath = path.join(FRAGMENTS_DIR, file);
-    const content = fs.readFileSync(fragmentPath, 'utf-8');
-    
-    // Extract the actual fragment content (skip HTML comments)
-    let fragmentContent = content;
-    
-    // Remove HTML comments (<!-- ... -->)
-    fragmentContent = fragmentContent.replace(/<!--[\s\S]*?-->/g, '').trim();
-    
-    // If there's still a Liquid comment structure, extract content after -->
-    const contentStart = fragmentContent.indexOf('-->\n');
-    if (contentStart !== -1) {
-      fragmentContent = fragmentContent.substring(contentStart + 4).trim();
-    }
-    
-    fragments[fragmentName] = fragmentContent;
-    console.log(`📦 Loaded fragment: ${fragmentName}`);
+    const name = path.basename(file, '.liquid');
+    const raw = fs.readFileSync(path.join(FRAGMENTS_DIR, file), 'utf-8');
+    fragments[name] = stripLeadingComments(raw);
   }
 
+  fragmentCache = fragments;
   return fragments;
 }
 
-/**
- * Process a Liquid template and inject fragments
- */
+export function getFragments(): Record<string, string> {
+  return loadFragments();
+}
+
+function reindent(block: string, indentation: string): string {
+  const lines = block.split('\n');
+  const smallestIndent = lines
+    .filter((line) => line.trim())
+    .reduce((smallest, line) => Math.min(smallest, line.length - line.trimStart().length), Infinity);
+
+  const offset = Number.isFinite(smallestIndent) ? smallestIndent : 0;
+
+  return lines
+    .map((line, index) => {
+      if (!line.trim()) return '';
+      const dedented = line.slice(offset);
+      return index === 0 ? dedented : indentation + dedented;
+    })
+    .join('\n');
+}
+
 export async function fragmentInjection(content: string): Promise<string> {
   const fragments = loadFragments();
-  let processedContent = content;
+  const missing = new Set<string>();
 
-  // Find all FRAGMENT.* references
-  const fragmentPattern = /FRAGMENT\.([a-zA-Z0-9-_]+)/g;
-  const matches = [...content.matchAll(fragmentPattern)];
+  const result = content.replace(
+    FRAGMENT_PATTERN,
+    (fullMatch, indentation: string, name: string) => {
+      const fragment = fragments[name];
 
-  if (matches.length > 0) {
-    console.log(`🔄 Processing ${matches.length} fragment(s)...`);
-  }
+      if (fragment === undefined) {
+        missing.add(name);
+        return fullMatch;
+      }
 
-  for (const match of matches) {
-    const [fullMatch, fragmentName] = match;
-    
-    if (fragments[fragmentName]) {
-      processedContent = processedContent.replace(fullMatch, fragments[fragmentName]);
-      console.log(`✅ Injected fragment: ${fragmentName}`);
-    } else {
-      console.warn(`⚠️  Fragment not found: ${fragmentName}`);
-      // Leave the FRAGMENT.* reference as-is if not found
+      return indentation + reindent(fragment, indentation);
     }
+  );
+
+  for (const name of missing) {
+    console.warn(`⚠️  [FRAGMENT] Not found: FRAGMENT.${name}`);
   }
 
-  return processedContent;
-} 
+  return result;
+}

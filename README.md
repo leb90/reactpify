@@ -1,239 +1,167 @@
-# 🚀 Reactpify
+# Reactpify
 
-**The ultimate React integration library for Shopify themes.** Build modern, interactive components with React while maintaining perfect SEO and theme compatibility.
+**Build Shopify theme sections with React.** You write a `.tsx` component; Reactpify generates the Liquid section, its schema, an SEO fallback, and hydrates the component in the browser.
 
-## ✨ Features
+Reactpify installs **on top of an existing Shopify theme**. It does not replace your theme, and it never touches your theme's own assets.
 
-### 🔄 **Automatic Liquid Generation**
-- **React → Liquid**: Automatically generates Shopify Liquid templates from your React components
-- **SEO-friendly fallbacks**: HTML shells rendered server-side for perfect SEO
-- **Theme Editor compatibility**: Components work seamlessly in Shopify's theme customizer
+---
 
-### 🎨 **Intelligent Theme Integration**
-- **Automatic Style Analysis**: Detects and extracts original theme styles
-- **Perfect Scoping**: CSS automatically scoped to avoid conflicts with existing theme
-- **Tailwind Integration**: Full Tailwind CSS v4 support with theme-aware configuration
+## How it works
 
-### 👀 **Bidirectional Watch System**
-- **React → Liquid Sync**: Changes in React components automatically update Liquid files
-- **Manual Edit Detection**: Detects when Liquid files are manually modified
-- **Real-time Updates**: Vite-powered development with instant hot reloading
+You write one file:
 
-### 🧩 **Fragment System**
-- **Reusable Snippets**: Share common Liquid schema fragments across components
-- **Auto-injection**: Fragments automatically injected during build process
-- **Extensible**: Easy to add custom fragments for your specific needs
+```tsx
+// src/components/hello/Hello.tsx
+interface HelloProps {
+  title?: string;
+  showButton?: boolean;
+}
 
-## 📋 Prerequisites
+export const Hello = ({ title = 'Hello World', showButton = true }: HelloProps) => (
+  <div className="p-6 text-center">
+    <h2 className="text-2xl font-bold">{title}</h2>
+    {showButton && <button type="button">Click me</button>}
+  </div>
+);
+```
 
-**Reactpify installs ON TOP of existing Shopify themes.** Before installing, you need:
+On `npm run build`, Reactpify reads the component's props with the TypeScript compiler and generates `sections/hello.liquid`:
 
-### 🏪 **Existing Shopify Theme**
-- A working Shopify theme directory with these folders:
-  ```
-  your-theme/
-  ├── assets/
-  ├── layout/
-  ├── sections/
-  ├── snippets/
-  └── templates/
-  ```
+- a `{% schema %}` with a `text` setting for `title` and a `checkbox` for `showButton`, using your default values
+- a `<script type="application/json" data-section-data>` block carrying the merchant's settings
+- a `<div data-fallback>` with server-rendered HTML, so the section is indexable without JavaScript
+- a `data-component-root="Hello"` attribute that the runtime uses to mount React
 
-### 🎯 **Compatible Themes**
-- ✅ **Dawn** (Shopify's free theme)
-- ✅ **Horizon** (Latest Shopify theme)
-- ✅ **Any modern Shopify theme** (Online Store 2.0+)
-- ✅ **Custom themes** with standard structure
+It also registers the component in `src/main.tsx` for you. There is no manual registration step.
 
-### 🚀 **How to Get a Shopify Theme**
+---
 
-**Option 1: Download from your Shopify store**
+## Requirements
+
+An existing Online Store 2.0 theme directory containing `assets/`, `layout/`, `sections/`, `snippets/` and `templates/`. Tested against **Dawn** and **Horizon**.
+
+If you don't have one yet:
+
 ```bash
-# Install Shopify CLI
-npm install -g @shopify/cli @shopify/theme
+# Install the Shopify CLI
+npm install -g @shopify/cli
 
-# Download your live theme
+# Pull your live theme...
 shopify theme pull
 
-# Or start with Dawn (free theme)
+# ...or start from Dawn
 shopify theme init my-theme --clone-url="https://github.com/Shopify/dawn"
 ```
 
-**Option 2: Use an existing theme directory**
-If you already have a Shopify theme folder, navigate to it:
-```bash
-cd your-existing-theme/
-# Now you can install Reactpify
-```
+---
 
-## 🚀 Quick Start
+## Installation
 
-### Installation
-
-**⚠️ Important: Run this command INSIDE your Shopify theme directory**
+Run this **inside your theme directory**:
 
 ```bash
 cd your-theme-folder/
 npm install reactpifyjs
 ```
 
-Reactpify will automatically:
-- ✅ Detect your Shopify theme
-- ✅ Install all necessary files
-- ✅ Update `layout/theme.liquid`
-- ✅ Create example components
-- ✅ Set up the build system
+The postinstall step detects the theme, copies the build system in, adds the Reactpify tags to `layout/theme.liquid`, and creates an example component. Existing files are never overwritten.
 
-### Basic Usage
-
-1. **Create a React Component**
-
-```tsx
-// src/components/hello/Hello.tsx
-import React, { useState } from 'react';
-
-interface HelloProps {
-  title?: string;
-  showButton?: boolean;
-}
-
-export const Hello: React.FC<HelloProps> = ({
-  title = "Hello World",
-  showButton = true
-}) => {
-  const [clicked, setClicked] = useState(false);
-
-  return (
-    <div className="reactpify-container max-w-md mx-auto p-6">
-      <div className="bg-blue-500 text-white p-6 rounded-lg shadow-lg text-center">
-        <h1 className="text-2xl font-bold mb-4">{title}</h1>
-        
-        {showButton && (
-          <button 
-            onClick={() => setClicked(!clicked)}
-            className="bg-white text-blue-500 px-4 py-2 rounded hover:bg-gray-100 transition-colors font-semibold"
-          >
-            {clicked ? '✅ Clicked!' : '👋 Click me'}
-          </button>
-        )}
-      </div>
-    </div>
-  );
-};
-```
-
-2. **Create the Liquid Template**
-
-```liquid
-<!-- src/components/hello/section.hello.liquid -->
-{% comment %}
-Auto-generated by Reactpify
-Component: Hello
-{% endcomment %}
-
-<div data-component-root data-section-data='{{ section | json | escape }}'>
-  <div data-fallback>
-    <div class="max-w-md mx-auto p-6">
-      <div class="bg-blue-500 text-white p-6 rounded-lg shadow-lg text-center">
-        <h1 class="text-2xl font-bold mb-4">{{ section.settings.title | default: 'Hello World' }}</h1>
-        
-        {% if section.settings.show_button %}
-          <button class="bg-white text-blue-500 px-4 py-2 rounded font-semibold">
-            👋 Click me
-          </button>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-</div>
-
-{{ 'main.css' | asset_url | stylesheet_tag }}
-{{ 'main.js' | asset_url | script_tag }}
-
-{% schema %}
-{
-  "name": "Hello",
-  "settings": [
-    {
-      "type": "text",
-      "id": "title",
-      "label": "Title",
-      "default": "Hello World"
-    },
-    {
-      "type": "checkbox",
-      "id": "show_button",
-      "label": "Show Button",
-      "default": true
-    },
-    FRAGMENT.color-scheme,
-    FRAGMENT.section-spacing
-  ],
-  "presets": [
-    {
-      "name": "Hello"
-    }
-  ]
-}
-{% endschema %}
-```
-
-3. **Register Your Component**
-
-```tsx
-// src/main.tsx
-import { registerComponent, initRenderSystem } from './utils/helpers/renderComponents';
-import { Hello } from './components/hello/Hello';
-
-registerComponent('Hello', Hello);
-initRenderSystem();
-```
-
-4. **Build and Deploy**
+Then:
 
 ```bash
-npm run build    # Production build
-npm run watch    # Development with auto-reload
-```
-
-## 🛠 Advanced Features
-
-### Theme Style Analyzer
-
-Automatically analyzes your existing Shopify theme styles and integrates them seamlessly:
-
-```bash
-# Automatically runs on first build
 npm run build
 ```
 
-**What it does:**
-- 🔍 Scans `assets/*.css` for theme styles
-- 🎯 Extracts important selectors (`:root`, `.shopify-*`, `@keyframes`, etc.)
-- 🛡️ Scopes styles to avoid conflicts with React components
-- 📄 Searches for embedded CSS in Liquid files
-- 💾 Generates `src/styles/theme-extracted.css` automatically
-
-### Bidirectional Watch System
-
-Monitor changes in both directions:
+### Connecting to your store
 
 ```bash
-npm run watch
+cp .env.example .env
 ```
 
-**Features:**
-- 👁️ Watches React component changes → Auto-updates Liquid
-- 🔧 Detects manual Liquid file modifications
-- ⚡ Real-time synchronization
-- 🚫 Prevents infinite loops with smart debouncing
+Set `SHOPIFY_STORE` (required) and, optionally, `SHOPIFY_DEV_THEME_ID` / `SHOPIFY_PROD_THEME_ID`. Then:
 
-### Fragment System
+```bash
+npm run env:dev     # shopify theme dev against your store
+npm run env:push    # upload the theme
+npm run env:pull    # download the theme
+```
 
-Create reusable Liquid schema fragments:
+---
+
+## Prop mapping
+
+Each prop on your component becomes a schema setting. The prop name is converted to `snake_case` for the setting `id`, and the value is passed back to React as `camelCase`.
+
+| Prop type in TypeScript | Liquid setting |
+| --- | --- |
+| `string` | `text` |
+| `number` | `number` |
+| `boolean` | `checkbox` |
+| string literal union | `select`, one option per member |
+
+Default values in the component signature become the setting defaults. Props that React can't receive from Liquid, such as functions, are skipped.
+
+String props get a more specific setting type when their **name** matches a known pattern, so you rarely have to hand-edit the schema:
+
+| Prop name ends with | Liquid setting |
+| --- | --- |
+| `image`, `photo`, `picture`, `thumbnail`, `logo`, `banner` | `image_picker` |
+| `url`, `link`, `href` | `url` |
+| `color` / `colour` | `color` |
+| `description`, `subtitle`, `content`, `body`, `message`, `excerpt` | `textarea` |
+
+A prop named exactly `product` or `collection` becomes a `product` or `collection` picker.
+
+---
+
+## Scripts
+
+| Command | What it does |
+| --- | --- |
+| `npm run build` | Production build: bundles React and regenerates all Liquid |
+| `npm run watch` | Rebuilds on change during development |
+| `npm run dev` | Vite dev server |
+| `npm run type-check` | `tsc --noEmit` |
+| `npm run clean` | Removes the generated `assets/reactpify.*` files |
+| `npm run env:dev` / `env:push` / `env:pull` | Shopify CLI wrappers that read `.env` |
+
+---
+
+## Editing generated Liquid
+
+Generated sections start with this marker:
 
 ```liquid
-<!-- src/utils/schema-fragments/custom-colors.liquid -->
+{% comment %}
+  REACTPIFY-AUTOGEN
+  Generated from src/components/test/Test.tsx. Edits are overwritten on every build.
+  Delete this comment block to take ownership of the file.
+{% endcomment %}
+```
+
+**Delete that comment block and the file is yours.** Reactpify detects the missing marker and stops regenerating it, so your edits survive every subsequent build. This also means a section you've taken ownership of will not pick up new props automatically.
+
+To customise the Liquid while keeping regeneration, edit the source template at `src/components/<name>/section.<name>.liquid` instead. That file is the input; `sections/<name>.liquid` is the output.
+
+---
+
+## Snippets
+
+Any file matching `src/snippets/snippet.<name>.liquid` is compiled to `snippets/<name>.liquid` on build, with fragments injected. Render it as usual:
+
+```liquid
+{% render 'custom-metaobject' %}
+```
+
+---
+
+## Fragments
+
+Fragments are reusable chunks of schema JSON, stored in `src/utils/schema-fragments/`. Reactpify ships with `color-scheme` and `section-spacing`.
+
+Create `src/utils/schema-fragments/custom-colors.liquid`:
+
+```liquid
 {
   "type": "select",
   "id": "custom_color",
@@ -245,7 +173,7 @@ Create reusable Liquid schema fragments:
 }
 ```
 
-Use in your components:
+Reference it by filename inside any schema, and it is inlined at build time with the surrounding indentation preserved:
 
 ```liquid
 {% schema %}
@@ -258,119 +186,92 @@ Use in your components:
 {% endschema %}
 ```
 
-## 📁 Project Structure
+---
+
+## Styling
+
+Tailwind CSS v4 is configured in `src/styles/index.css`, which loads each stylesheet into an explicit cascade layer:
+
+```css
+@import './main.css';
+@import './theme-extracted.css' layer(theme);
+@import './base.css'            layer(base);
+@import './animations.css'      layer(base);
+@import './components.css'      layer(components);
+@import './utilities.css'       layer(utilities);
+```
+
+Tailwind's global preflight is **disabled**. The reset in `base.css` is scoped to `[data-component-root]` so it can't leak into your theme, and the layer order guarantees that a single utility class still beats that scoped reset.
+
+There is no `tailwind.config.js`: Tailwind v4 is configured from CSS.
+
+The **theme style analyzer** runs on each build, reads the CSS custom properties your theme defines on `:root` and `html`, and writes them to `src/styles/theme-extracted.css`. That lets your components consume the theme's own colours and spacing. The file is generated, so don't edit it.
+
+To outline the elements the runtime mounted, append `?reactpify-debug` to the URL or run `localStorage.setItem('reactpify-debug', 'true')`. Reactpify then sets `data-reactpify-debug="true"` on `<html>`, which is what the debug styles hook into. Without the flag those styles never apply, so they cost nothing in production.
+
+The runtime also exposes `window.reactpify` with `registry()`, `refresh()`, `mount()` and `unmount()` for inspecting or re-scanning the page from the console.
+
+---
+
+## Project structure
 
 ```
 your-theme/
 ├── src/
 │   ├── components/
 │   │   └── hello/
-│   │       ├── Hello.tsx              # React component
-│   │       └── section.hello.liquid   # Liquid template
+│   │       ├── Hello.tsx                   # you write this
+│   │       └── section.hello.liquid        # generated source template
+│   ├── snippets/
+│   │   └── snippet.custom-metaobject.liquid
 │   ├── styles/
-│   │   ├── main.css                   # Main styles
-│   │   └── theme-extracted.css        # Auto-generated theme styles
-│   ├── utils/
-│   │   └── schema-fragments/          # Reusable Liquid fragments
-│   └── main.tsx                       # Entry point
+│   │   ├── index.css                       # entry point
+│   │   └── theme-extracted.css             # generated
+│   ├── utils/schema-fragments/             # reusable schema chunks
+│   └── main.tsx                            # generated registry
 ├── sections/
-│   └── hello.liquid                   # Auto-copied from src/
+│   └── hello.liquid                        # generated output
+├── snippets/
+│   └── custom-metaobject.liquid            # generated output
 ├── assets/
-│   ├── main.css                       # Built CSS
-│   └── main.js                        # Built JS
-└── vite.config.ts                     # Vite configuration
+│   ├── reactpify.js                        # bundle
+│   └── reactpify.css                       # styles
+├── .shopifyignore                          # keeps src/ and node_modules/ off the store
+├── .theme-check.yml
+└── vite.config.ts
 ```
 
-## ⚙️ Configuration
-
-### Vite Configuration
-
-The library includes a pre-configured Vite setup optimized for Shopify:
-
-```ts
-// vite.config.ts - Already configured!
-export default defineConfig(({ mode }) => ({
-  // ✅ Theme Style Analyzer
-  // ✅ Bidirectional Watch
-  // ✅ Auto Component Registry
-  // ✅ Fragment Injection
-  // ✅ Tailwind CSS v4
-  // ✅ CSS Extraction
-  // ✅ Asset Optimization
-}));
-```
-
-### Tailwind Configuration
-
-Fully configured with theme-aware settings:
-
-```js
-// tailwind.config.js - Already configured!
-export default {
-  content: [
-    './src/**/*.{ts,tsx}',
-    './src/components/**/*.liquid',
-    './sections/**/*.liquid'
-  ],
-  // ✅ Scoped to [data-component-root]
-  // ✅ Preflight disabled
-  // ✅ Custom Reactpify variables
-  // ✅ Animation safelist
-};
-```
-
-## 🎯 Best Practices
-
-### 1. Component Structure
-- Keep components in `src/components/[name]/`
-- Use consistent naming: `ComponentName.tsx` + `section.component-name.liquid`
-- Always provide fallback HTML for SEO
-
-### 2. Styling
-- Use Tailwind classes for consistency
-- Scope custom CSS with `.reactpify-*` classes
-- Leverage CSS variables for theme integration
-
-### 3. Liquid Templates
-- Include `data-component-root` for React mounting
-- Provide meaningful fallback content
-- Use fragments for common schema patterns
-
-### 4. Development Workflow
-- Use `npm run watch` for development
-- Test both JavaScript-enabled and disabled scenarios
-- Verify theme customizer compatibility
-
-## 🚀 Production Deployment
-
-```bash
-# Build for production
-npm run build
-
-# Files generated:
-# ✅ assets/main.css - All styles combined
-# ✅ assets/main.js - React components bundle
-# ✅ sections/*.liquid - Updated Liquid templates
-```
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch: `git checkout -b feature/amazing-feature`
-3. Commit your changes: `git commit -m 'Add amazing feature'`
-4. Push to the branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
-
-## 📝 License
-
-MIT License - see [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-- 📚 [Documentation](https://github.com/yourusername/reactpify/docs)
-- 🐛 [Issue Tracker](https://github.com/yourusername/reactpify/issues)
-- 💬 [Discussions](https://github.com/yourusername/reactpify/discussions)
+Everything Reactpify emits into `assets/` is prefixed `reactpify.`, so it can never collide with your theme's own files.
 
 ---
 
-**Made with ❤️ for the Shopify community**
+## Theme Editor
+
+Sections mount on page load, and the runtime also listens for `shopify:section:load` and `shopify:section:unload` so components remount correctly when a merchant adds, moves or removes a section in the customizer. React roots are unmounted on removal rather than left behind. A `MutationObserver` picks up sections injected dynamically, such as in a cart drawer.
+
+Each component is wrapped in an error boundary: if one component throws, the rest of the page keeps working and the SEO fallback stays visible.
+
+---
+
+## Validating your theme
+
+Reactpify ships a `.theme-check.yml` that excludes `src/` from analysis, since those files contain `FRAGMENT.*` placeholders that aren't valid Liquid until the build inlines them.
+
+```bash
+shopify theme check
+```
+
+Generated sections and snippets are expected to pass with no errors and no warnings.
+
+---
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch: `git checkout -b feature/amazing-feature`
+3. Commit your changes
+4. Push and open a Pull Request
+
+## License
+
+MIT License — see [LICENSE](LICENSE).

@@ -1,6 +1,6 @@
 {
   "name": "reactpifyjs",
-  "version": "1.0.23",
+  "version": "2.0.0",
   "description": "🚀 The easiest way to add React components to any Shopify theme with Vite, Tailwind CSS, and intelligent Liquid auto-generation",
   "keywords": [
     "shopify",
@@ -27,18 +27,22 @@
   "bin": {
     "reactpify": "./scripts/setup.js"
   },
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
   "files": [
     "vite-plugins/",
     "src/",
     "scripts/",
     "README.md",
     "LICENSE",
-    "tailwind.config.js",
     "tsconfig.json",
     "tsconfig.node.json",
     "vite.config.ts",
     "vite-fragment-injection.ts",
     ".gitignore",
+    ".shopifyignore",
+    ".theme-check.yml",
     "env.example",
     "start-dev.ps1",
     "start-dev.sh"
@@ -49,30 +53,29 @@
     "build": "vite build",
     "watch": "vite build --watch --mode development",
     "preview": "vite preview",
-    "clean": "rm -rf assets/main.* sections/auto-*.liquid",
-    "type-check": "tsc --noEmit"
+    "clean": "rm -rf assets/reactpify.js assets/reactpify.css assets/reactpify.js.map",
+    "type-check": "tsc --noEmit",
+    "env:dev": "node scripts/shopify-env.js dev",
+    "env:push": "node scripts/shopify-env.js push",
+    "env:pull": "node scripts/shopify-env.js pull"
   },
   "peerDependencies": {
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@reduxjs/toolkit": "^2.4.0",
-    "@tailwindcss/vite": "^4.0.13",
-    "@types/node": "^22.10.2",
-    "@types/react": "^19.0.2",
-    "@types/react-dom": "^19.0.2",
-    "@vitejs/plugin-react": "^4.3.4",
-    "chokidar": "^4.0.1",
-    "glob": "^11.0.0",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "react-redux": "^9.2.0",
-    "rollup": "^4.30.1",
-    "tailwindcss": "^4.0.13",
-    "typescript": "~5.7.3",
-    "vite": "^6.0.7",
-    "vite-plugin-static-copy": "^2.1.0"
+    "@reduxjs/toolkit": "^2.12.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^24.13.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-redux": "^9.3.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~5.9.3",
+    "vite": "^8.3.0"
   },
   "type": "module"
 }
