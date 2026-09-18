@@ -53,19 +53,29 @@ function camelizeKeys(source: ComponentProps): ComponentProps {
   );
 }
 
-function parseJson(raw: string | null, context: string): ComponentProps | null {
-  if (!raw || !raw.trim()) return null;
+type PayloadResult =
+  | { status: 'ok'; props: ComponentProps }
+  | { status: 'missing' }
+  | { status: 'invalid' };
+
+function parseJson(raw: string | null, context: string): PayloadResult {
+  if (!raw || !raw.trim()) return { status: 'missing' };
 
   try {
     const parsed: unknown = JSON.parse(raw);
-    return typeof parsed === 'object' && parsed !== null ? (parsed as ComponentProps) : null;
+    if (typeof parsed === 'object' && parsed !== null) {
+      return { status: 'ok', props: parsed as ComponentProps };
+    }
+
+    logError(`JSON in ${context} is not an object`);
+    return { status: 'invalid' };
   } catch (error) {
     logError(`invalid JSON in ${context}:`, error);
-    return null;
+    return { status: 'invalid' };
   }
 }
 
-function findOwnDataPayload(container: HTMLElement): ComponentProps | null {
+function findOwnDataPayload(container: HTMLElement): PayloadResult {
   const script = container.querySelector<HTMLScriptElement>(SECTION_DATA_SELECTOR);
 
   if (script && script.closest(COMPONENT_ROOT_SELECTOR) === container) {
@@ -75,17 +85,17 @@ function findOwnDataPayload(container: HTMLElement): ComponentProps | null {
   return parseJson(container.getAttribute('data-section-data'), 'data-section-data attribute');
 }
 
-function extractProps(container: HTMLElement): ComponentProps {
+function extractProps(container: HTMLElement): PayloadResult {
   const payload = findOwnDataPayload(container);
-  if (!payload) return {};
+  if (payload.status !== 'ok') return payload;
 
-  const settings = payload.settings;
+  const settings = payload.props.settings;
   const source =
     typeof settings === 'object' && settings !== null
       ? (settings as ComponentProps)
-      : payload;
+      : payload.props;
 
-  return camelizeKeys(source);
+  return { status: 'ok', props: camelizeKeys(source) };
 }
 
 interface ErrorBoundaryProps {
@@ -179,7 +189,16 @@ export function mountComponent(container: HTMLElement): void {
     return;
   }
 
-  const props = extractProps(container);
+  const payload = extractProps(container);
+
+  if (payload.status === 'invalid') {
+    logError(
+      `component "${componentName}" kept its Liquid fallback because the section data is not valid JSON`
+    );
+    return;
+  }
+
+  const props = payload.status === 'ok' ? payload.props : {};
   const mountNode = createMountNode(container);
   const root = createRoot(mountNode);
 
