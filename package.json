@@ -16,7 +16,7 @@
   "homepage": "https://github.com/leb90/reactpify",
   "repository": {
     "type": "git",
-    "url": "https://github.com/leb90/reactpify.git"
+    "url": "git+https://github.com/leb90/reactpify.git"
   },
   "bugs": {
     "url": "https://github.com/leb90/reactpify/issues"
@@ -25,7 +25,7 @@
   "license": "MIT",
   "main": "vite.config.ts",
   "bin": {
-    "reactpify": "./scripts/setup.js"
+    "reactpify": "scripts/setup.js"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0"
