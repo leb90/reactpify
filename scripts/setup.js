@@ -17,13 +17,45 @@ const CONFIG_FILES = [
   'tsconfig.json',
   'tsconfig.node.json',
   'vite-fragment-injection.ts',
-  '.gitignore',
-  '.shopifyignore',
-  '.theme-check.yml',
   'env.example',
   'start-dev.ps1',
   'start-dev.sh'
 ];
+
+const IGNORE_HEADER = '# Reactpify';
+
+const SHOPIFYIGNORE_ENTRIES = [
+  'node_modules/*',
+  'src/*',
+  'vite-plugins/*',
+  'scripts/*',
+  '*.ts',
+  '*.tsx',
+  'package.json',
+  'package-lock.json',
+  'tsconfig*.json',
+  '.env',
+  '.env.*',
+  'assets/*.map'
+];
+
+const GITIGNORE_ENTRIES = [
+  'node_modules/',
+  '.env',
+  '.env.local',
+  '.shopify/',
+  'assets/reactpify.js',
+  'assets/reactpify.js.map',
+  'assets/reactpify.css',
+  '*.tsbuildinfo',
+  '*.tgz'
+];
+
+const THEME_CHECK_HEADER =
+  '# Reactpify keeps its Liquid sources under src/. They hold FRAGMENT.*\n' +
+  '# placeholders and only become valid theme files once the build runs.';
+
+const THEME_CHECK_IGNORES = ['node_modules/**', 'src/**', 'vite-plugins/**', 'scripts/**'];
 
 const SOURCE_DIRECTORIES = [
   'src/styles',
@@ -119,15 +151,70 @@ function installProjectFiles() {
   log(`✅ Installed ${copied} project file(s)`, 'green');
 }
 
+function appendSection(filePath, block) {
+  const existing = fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : '';
+  const padding = existing === '' ? '' : existing.endsWith('\n') ? '\n' : '\n\n';
+
+  fs.writeFileSync(filePath, `${existing}${padding}${block}\n`);
+}
+
+function normalizePattern(pattern) {
+  return pattern
+    .trim()
+    .replace(/\/\*$/, '')
+    .replace(/\/+$/, '');
+}
+
+function mergeIgnoreFile(filePath, entries) {
+  const existing = fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : '';
+  const alreadyIgnored = new Set(existing.split('\n').map(normalizePattern));
+  const missing = entries.filter((entry) => !alreadyIgnored.has(normalizePattern(entry)));
+
+  if (missing.length === 0) return;
+
+  appendSection(filePath, `${IGNORE_HEADER}\n${missing.join('\n')}`);
+  log(`✅ ${filePath} updated (${missing.length} entry/ies added)`, 'green');
+}
+
+function mergeThemeCheck() {
+  const configPath = '.theme-check.yml';
+
+  if (!fs.existsSync(configPath)) {
+    fs.copyFileSync(path.join(PACKAGE_ROOT, '.theme-check.yml'), configPath);
+    log('✅ Created .theme-check.yml', 'green');
+    return;
+  }
+
+  const existing = fs.readFileSync(configPath, 'utf8');
+  const missing = THEME_CHECK_IGNORES.filter((pattern) => !existing.includes(pattern));
+
+  if (missing.length === 0) return;
+
+  const entries = missing.map((pattern) => `  - ${pattern}`).join('\n');
+  const ignoreKeyPattern = /^ignore:[ \t]*$/m;
+
+  if (ignoreKeyPattern.test(existing)) {
+    fs.writeFileSync(configPath, existing.replace(ignoreKeyPattern, `ignore:\n${entries}`));
+  } else {
+    appendSection(configPath, `${THEME_CHECK_HEADER}\nignore:\n${entries}`);
+  }
+
+  log(`✅ .theme-check.yml updated (${missing.length} ignore rule(s) added)`, 'green');
+}
+
 function insertBeforeTag(content, tag, snippet) {
   const pattern = new RegExp(`([ \\t]*)</${tag}>`, 'i');
 
   if (!pattern.test(content)) return null;
 
-  return content.replace(
-    pattern,
-    (_, indentation) => `${indentation}  ${snippet}\n${indentation}</${tag}>`
-  );
+  return content.replace(pattern, (_, indentation) => {
+    const indented = snippet
+      .split('\n')
+      .map((line) => `${indentation}  ${line}`)
+      .join('\n');
+
+    return `${indented}\n${indentation}</${tag}>`;
+  });
 }
 
 function updateThemeLayout() {
@@ -148,7 +235,7 @@ function updateThemeLayout() {
   const withStyles = insertBeforeTag(
     original,
     'head',
-    `${THEME_MARKER}\n  {{ 'reactpify.css' | asset_url | stylesheet_tag }}`
+    `${THEME_MARKER}\n{{ 'reactpify.css' | asset_url | stylesheet_tag }}`
   );
   // The bundle is ESM, so it needs type="module" rather than script_tag.
   const withScripts = insertBeforeTag(
@@ -260,6 +347,9 @@ function runSetup() {
   log('✅ Shopify theme detected', 'green');
 
   installProjectFiles();
+  mergeIgnoreFile('.gitignore', GITIGNORE_ENTRIES);
+  mergeIgnoreFile('.shopifyignore', SHOPIFYIGNORE_ENTRIES);
+  mergeThemeCheck();
   createExampleComponent();
 
   updatePackageJson();
