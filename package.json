@@ -59,11 +59,7 @@
     "env:push": "node scripts/shopify-env.js push",
     "env:pull": "node scripts/shopify-env.js pull"
   },
-  "peerDependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
-  },
-  "devDependencies": {
+  "dependencies": {
     "@reduxjs/toolkit": "^2.12.0",
     "@tailwindcss/vite": "^4.3.3",
     "@types/node": "^24.13.5",
