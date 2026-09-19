@@ -104,7 +104,7 @@ function applyDefault(setting: LiquidSetting, prop: ComponentProp): void {
 
 function buildLiquidValue(settingId: string, settingType: string): string {
   if (settingType === 'image_picker') {
-    return `{{ section.settings.${settingId} | image_url: width: 1600 | json }}`;
+    return `{% if section.settings.${settingId} != blank %}{{ section.settings.${settingId} | image_url: width: 1600 | json }}{% else %}null{% endif %}`;
   }
 
   return `{{ section.settings.${settingId} | json }}`;
